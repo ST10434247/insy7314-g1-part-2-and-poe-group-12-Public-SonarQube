@@ -23,5 +23,6 @@ const getCardType = (cardNumber) =>{
     const sanitized = cardNumber.replace(/\D/g,'');
     if(/^4/.test(sanitized)) return 'Visa';
     if(/^(5[1-5]|2[2-7])/.test(sanitized)) return 'Mastercard';
+    return 'Unknown';
 };
 module.export = (validateLuhn,getCardType);
