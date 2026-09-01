@@ -8,6 +8,7 @@ const mongoose = require('mongoose');
 const mongoSanitize = require('express-mongo-sanitize');
 const gigRoutes = require('./routes/gigRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
+const authRoutes = require('./routes/auth');
 
 const app = express();
 
@@ -34,7 +35,7 @@ app.use(express.json());
 // Routes
 app.use('/api/gigs', gigRoutes);
 app.use('/api/bookings', bookingRoutes);
-
+app.use('/api/auth', authRoutes);
 // Database Connection
 mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/gigDB')
   .then(() => console.log('MongoDB Connected'))

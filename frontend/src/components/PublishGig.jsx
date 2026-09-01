@@ -9,30 +9,45 @@ export default function PublishGig({ onGigPublished }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!token) {
+      return alert('Your session has expired. Please log in again.');
+    }
+
     if (!title || !description || !price) {
       return alert('Please fill in all fields');
     }
 
-    const res = await fetch('/api/gigs', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify({ title, description, price: Number(price) })
-    });
+    try {
+      const res = await fetch('/api/gigs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ 
+          title, 
+          description, 
+          price: Number(price) 
+        })
+      });
 
-    if (res.ok) {
-      const newGig = await res.json();
-      alert('Gig published successfully!');
-      setTitle('');
-      setDescription('');
-      setPrice('');
-      if (onGigPublished) {
-        onGigPublished(newGig);
+      const data = await res.json();
+
+      if (res.ok) {
+        alert('Gig published successfully!');
+        setTitle('');
+        setDescription('');
+        setPrice('');
+        if (onGigPublished) {
+          onGigPublished(data);
+        }
+      } else {
+        alert(`Failed to publish gig: ${data.message || 'Server error'}`);
       }
-    } else {
-      alert('Failed to publish gig.');
+    } catch (err) {
+      console.error('Network Error:', err);
+      alert('Could not connect to the backend server.');
     }
   };
 

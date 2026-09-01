@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { body } = require('express-validator');
 const handleValidationErrors = require('../middleware/validate');
-const authenticateToken = require('../middleware/auth');
+const {authenticateToken} = require('../middleware/auth');
 
 // Temporary in-memory storage (Replace with MongoDB model in Step 3)
 const users = [];
@@ -15,7 +15,7 @@ router.post(
   [
     body('email').isEmail().withMessage('Please provide a valid email address.').normalizeEmail(),
     body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long.'),
-    body('role').optional().isIn(['user', 'admin']).withMessage('Role must be either "user" or "admin".')
+    body('role').optional().isIn(['freelancer', 'client', 'admin']).withMessage('Role must be either "client" or "freelancer".')
   ],
   handleValidationErrors,
   async (req, res, next) => {
