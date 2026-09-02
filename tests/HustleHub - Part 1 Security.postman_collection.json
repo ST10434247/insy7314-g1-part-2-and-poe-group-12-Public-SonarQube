@@ -40,6 +40,36 @@
       "response": []
     },
     {
+      "name": "Register - Missing Password",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"email\": \"test@example.com\",\r\n  \"role\": \"client\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://localhost:3000/api/auth/register",
+          "protocol": "https",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "auth",
+            "register"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
       "name": "Register - Invalid Role",
       "request": {
         "method": "POST",
@@ -100,7 +130,7 @@
       "response": []
     },
     {
-      "name": "Register - Invalid Email",
+      "name": "Register - Duplicate Email",
       "request": {
         "auth": {
           "type": "inherit"
@@ -109,7 +139,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n  \"email\": \"not-an-email\",\r\n  \"password\": \"TestPassword123!\",\r\n  \"role\": \"client\"\r\n}",
+          "raw": "{\r\n  \"email\": \"test@example.com\",\r\n  \"password\": \"TestPassword123!\",\r\n  \"role\": \"client\"\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -133,13 +163,13 @@
       "response": []
     },
     {
-      "name": "Register - Duplicate Email",
+      "name": "Register - Invalid Email",
       "request": {
         "method": "POST",
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n  \"email\": \"test@example.com\",\r\n  \"password\": \"TestPassword123!\",\r\n  \"role\": \"client\"\r\n}",
+          "raw": "{\r\n  \"email\": \"not-an-email\",\r\n  \"password\": \"TestPassword123!\",\r\n  \"role\": \"client\"\r\n}",
           "options": {
             "raw": {
               "language": "json"
