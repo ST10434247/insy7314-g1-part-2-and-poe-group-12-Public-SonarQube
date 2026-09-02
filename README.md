@@ -211,9 +211,9 @@ certs/
 
 To generate the required files run the following command
 
-'''text
+```text
   openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 30 -nodes 
-'''
+```
 
 ### Environment Configuration
 
