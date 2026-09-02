@@ -12,44 +12,47 @@ The application uses an in-memory user store for Part 1. Persistent database sto
 
 ## System Architecture
 
-The Part 1 backend uses Node.js and Express to provide a secure REST API.
+The overall HustleHub application follows the MERN architecture. For Part 1, the assessment focuses on the secure Node.js and Express backend.
 
 ```text
-                  HTTPS
-┌───────────────────────────────┐
-│        Client / Postman       │
-└───────────────┬───────────────┘
-                │
-                ▼
-┌───────────────────────────────┐
-│       Node.js + Express       │
-│                               │
-│  ┌─────────────────────────┐  │
-│  │ Security Middleware     │  │
-│  │ Helmet                  │  │
-│  │ JSON Body Limit         │  │
-│  └────────────┬────────────┘  │
-│               ▼               │
-│  ┌─────────────────────────┐  │
-│  │ Authentication Routes   │  │
-│  │ Register / Login        │  │
-│  └────────────┬────────────┘  │
-│               ▼               │
-│  ┌─────────────────────────┐  │
-│  │ Input Validation        │  │
-│  │ express-validator       │  │
-│  └────────────┬────────────┘  │
-│               ▼               │
-│  ┌─────────────────────────┐  │
-│  │ Authentication Logic    │  │
-│  │ bcryptjs + JWT          │  │
-│  └────────────┬────────────┘  │
-│               ▼               │
-│  ┌─────────────────────────┐  │
-│  │ In-Memory User Store    │  │
-│  └─────────────────────────┘  │
-└───────────────────────────────┘
+                         MERN Architecture
+
+┌─────────────────────────────────────────────────────────────┐
+│                         React Frontend                       │
+│                  Client-facing application                   │
+└──────────────────────────────┬──────────────────────────────┘
+                               │
+                            HTTPS
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    Node.js + Express API                     │
+│                                                             │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │                 Part 1 Security Layer                 │  │
+│  │                                                       │  │
+│  │  Helmet → JSON Limits → Validation → Authentication  │  │
+│  │                                                       │  │
+│  │        bcryptjs + JWT + Protected Routes             │  │
+│  └───────────────────────────┬───────────────────────────┘  │
+│                              │                              │
+│                    Part 1: In-Memory Store                  │
+└──────────────────────────────┼──────────────────────────────┘
+                               │
+                     Later Project Stage
+                               │
+                               ▼
+                    ┌─────────────────────┐
+                    │       MongoDB       │
+                    │   Persistent data   │
+                    └─────────────────────┘
 ```
+
+### Part 1 Scope
+
+The overall HustleHub system follows the MERN architecture, consisting of MongoDB, Express, React, and Node.js. For Part 1, the assessment focuses on the secure Node.js and Express backend.
+
+The React frontend and MongoDB persistence are part of the overall system architecture but are intentionally not included in this Part 1 submission. An in-memory user store is used to satisfy the Part 1 authentication requirements without introducing database functionality at this stage.
 
 ### Authentication Flow
 
@@ -298,15 +301,51 @@ tests/HustleHub-Part1-Security.postman_collection.json
 The collection contains tests for:
 
 1. Valid registration
-2. Duplicate email registration
-3. Invalid email registration
+2. Missing password registration
+3. Invalid role registration
 4. Short password registration
-5. Invalid role registration
-6. Valid login
-7. Invalid login credentials
-8. Protected route with a valid JWT
-9. Protected route without a JWT
-10. Protected route with an invalid JWT
+5. Duplicate email registration
+6. Invalid email registration
+7. Valid login
+8. Invalid login credentials
+9. Protected route with a valid JWT
+10. Protected route without a JWT
+11. Protected route with an invalid JWT
+
+### Running the Tests
+
+Start the backend server before sending requests:
+
+```bash
+cd backend
+npm start
+```
+
+The API is available at:
+
+```text
+https://localhost:3000
+```
+
+Import the Postman collection and execute the requests individually.
+
+For the protected route test using a valid JWT:
+
+1. Run **Login - Valid**.
+2. Copy the JWT returned in the response.
+3. Open **Protected - Valid Token**.
+4. Add the following HTTP header:
+
+```text
+Authorization: Bearer <JWT>
+```
+
+5. Replace `<JWT>` with the token returned by the login request.
+6. Send the request and verify that the protected resource returns a successful response.
+
+The **Protected - Invalid Token** request deliberately uses an invalid token to demonstrate that the API rejects tokens that cannot be successfully verified.
+
+The **Protected - No Token** request does not include an Authorization header and demonstrates that protected resources cannot be accessed without authentication.
 
 Screenshots of the test responses are stored in:
 
@@ -314,7 +353,7 @@ Screenshots of the test responses are stored in:
 tests/screenshots/
 ```
 
-These tests demonstrate both successful functionality and rejection of invalid or unauthorised requests.
+These tests demonstrate both successful functionality and rejection of invalid, malformed, and unauthorised requests.
 
 For local HTTPS testing, Postman may require SSL certificate verification to be disabled when using the self-signed development certificate.
 

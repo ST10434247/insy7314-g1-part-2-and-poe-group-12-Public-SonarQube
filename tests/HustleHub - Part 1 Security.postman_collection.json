@@ -265,7 +265,7 @@
         "header": [
           {
             "key": "Authorization",
-            "value": "Bearer {{jwtToken}}",
+            "value": "Bearer <PASTE-JWT-FROM-LOGIN-HERE>",
             "type": "text",
             "id": 0
           }
