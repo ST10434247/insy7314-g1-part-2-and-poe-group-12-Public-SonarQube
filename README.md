@@ -209,7 +209,11 @@ certs/
 └── key.pem
 ```
 
-These files are for local development and must not be committed to GitHub.
+To generate the required files run the following command
+
+'''text
+  openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 30 -nodes 
+'''
 
 ### Environment Configuration
 
