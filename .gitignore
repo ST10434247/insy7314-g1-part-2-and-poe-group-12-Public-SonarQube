@@ -1,8 +1,13 @@
 node_modules/
+
+# Environment files may contain secrets such as JWT signing keys.
 .env
 
+# Certificate and private-key files must never be committed to source control.
 *.pem
 *.key
 *.crt
 *.p12
+*.pfx
+*.cer
 certs/
