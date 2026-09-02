@@ -6,7 +6,7 @@ HustleHub is a RESTful web application designed to connect clients with freelanc
 
 This repository contains the Part 1 security implementation of the project. The focus of this stage is secure user authentication, password protection, JWT-based authentication, HTTPS communication, input validation, and controlled error handling.
 
-The application uses an in-memory user store for Part 1. Persistent database storage and additional application functionality are introduced in later stages of the project.
+The application uses an in-memory user store for Part 1.
 
 ---
 
