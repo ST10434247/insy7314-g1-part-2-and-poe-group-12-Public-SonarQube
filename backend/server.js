@@ -1,12 +1,17 @@
-require('dotenv').config();
 const path = require('path');
 const fs = require('fs');
 const https = require('https');
 const express = require('express');
 const helmet = require('helmet');
 const authRoutes = require('./routes/auth');
-
 const app = express();
+
+// Loads environment variables from the project root so configuration remains
+// separate from the backend source code and is available regardless of the
+// directory from which the server is started.
+require('dotenv').config({
+  path: path.resolve(__dirname, '../.env')
+});
 
 // Security middleware adds HTTP security headers and restricts which resources
 // the application is allowed to load, reducing the risk of common browser-based attacks.
