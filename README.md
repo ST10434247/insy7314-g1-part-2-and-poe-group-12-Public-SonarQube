@@ -215,6 +215,16 @@ To generate the required files run the following command
   openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 30 -nodes 
 ```
 
+### JWT Secret Generation
+
+To generate a secure, cryptographically strong secret key for your `JWT_SECRET` environment variable, run the following command in your terminal:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+```
+
+Copy the output string and paste it as your `JWT_SECRET` value in your `.env` file.
+
 ### Environment Configuration
 
 Create the `.env` file in the project root and provide the required configuration values.
