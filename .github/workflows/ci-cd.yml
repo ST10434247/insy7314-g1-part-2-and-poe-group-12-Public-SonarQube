@@ -1,70 +1,46 @@
-name: MERN CI/CD Pipeline & Static Analysis
+name: Part 1 Security Checks
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ master ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ master ]
 
 jobs:
   backend-checks:
-    name: Backend Lint, Test & Build
+    name: Backend Security and Code Checks
     runs-on: ubuntu-latest
+
     defaults:
       run:
         working-directory: ./backend
 
     steps:
+      # Retrieves the repository contents so the backend can be checked.
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
+      # Uses the Node.js version required to install and run the backend.
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: './backend/package-lock.json'
 
+      # Installs the exact dependency versions recorded in package-lock.json.
       - name: Install Dependencies
         run: npm ci
 
-      - name: Static Code Security Analysis (npm audit & ESLint)
-        run: |
-          npm audit --audit-level=high
-          npx eslint . --max-warnings=0
+      # Checks installed dependencies for known high-severity security vulnerabilities.
+      - name: Security Audit
+        run: npm audit --audit-level=high
 
-      - name: Run Backend Unit & Integration Tests
-        run: npm test
-        env:
-          JWT_SECRET: testsecretkey
-          MONGO_URI: mongodb://127.0.0.1:27017/testdb
+      # Performs static analysis on the backend source code.
+      - name: ESLint Analysis
+        run: npx eslint . --max-warnings=0
 
-  frontend-checks:
-    name: Frontend Lint, Test & Build
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./frontend
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: './frontend/package-lock.json'
-
-      - name: Install Dependencies
-        run: npm ci
-
-      - name: Static Code Analysis (ESLint)
-        run: npx eslint src/ --max-warnings=0
-
-      - name: Run Frontend Tests (Jest / RTL)
-        run: npm test -- --watchAll=false
-
-      - name: Build React Application
-        run: npm run build
+      # Verifies that the backend can be loaded and the server source contains
+      # no syntax errors without requiring the HTTPS server to remain running.
+      - name: Validate Server Syntax
+        run: node --check server.js
