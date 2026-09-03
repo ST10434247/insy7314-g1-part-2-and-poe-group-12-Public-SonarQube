@@ -396,3 +396,17 @@ The following types of files are excluded using `.gitignore`:
 - Node.js dependencies
 
 The JWT signing secret and HTTPS private key are supplied through local environment configuration and are not included in the repository.
+
+
+---
+
+## References
+
+- Auth0, 2020. Navigating RS256 and JWKS [code]. Available at: <https://auth0.com/blog/navigating-rs256-and-jwks/> [Accessed 17 August 2026].
+- Auth0, 2026. Express.js Code Sample: API Role-Based Access Control [code]. Available at: <https://developer.auth0.com/resources/code-samples/api/express/basic-role-based-access-control> [Accessed 17 August 2026].
+- Auth0, 2026. Node.js API Authorization By Example [code]. Available at: <https://developer.auth0.com/resources/guides/api/express/basic-authorization> [Accessed 18 August 2026].
+- bcryptjs, 2026. bcryptjs [code]. Available at: <https://www.npmjs.com/package/bcryptjs> [Accessed 18 August 2026].
+- Express.js, 2026. Express routing [code]. Available at: <https://expressjs.com/en/guide/routing.html> [Accessed 3 September 2026].
+- express-validator, 2026. express-validator documentation [code]. Available at: <https://express-validator.github.io/docs/> [Accessed 18 August 2026].
+
+
