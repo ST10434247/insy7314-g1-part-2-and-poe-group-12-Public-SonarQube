@@ -1,5 +1,8 @@
 node_modules/
 
+# Visual Studio temporary files
+.vs/
+
 # Environment files may contain secrets such as JWT signing keys.
 .env
 

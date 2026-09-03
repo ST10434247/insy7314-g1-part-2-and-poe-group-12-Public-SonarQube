@@ -6,6 +6,10 @@ const { body } = require('express-validator');
 const handleValidationErrors = require('../middleware/validate');
 const { authenticateToken } = require('../middleware/auth');
 
+// USER REGISTRATION AND LOGIN
+// VALIDATES USER'S DETAILS, BCRYPT FOR HASH PASSWORD THEN JWT SESSION TOKEN IF LOGIN SUCCESSFUL
+// JWT MAKES SURE THAT ONLY AUTHENTICATED USERS CAN USE THIS ROUTE
+
 // Stores registered users in memory for Part 1.
 // Persistent database storage is introduced in a later stage of the project,
 // so keeping users in memory allows the authentication requirements to be
@@ -43,10 +47,14 @@ router.post(
           error: 'User with this email already exists.'
         });
       }
+      // PASSWORD HASHING
+      // (bcryptjs, 2026)
 
       // Passwords are never stored in plaintext. bcrypt creates a one-way password hash
       // using a work factor of 12, making password cracking significantly more expensive
       // if the stored user data were ever exposed.
+
+      
       const hashedPassword = await bcrypt.hash(password, 12);
 
       const newUser = {
@@ -74,6 +82,10 @@ router.post(
 
 // Login verifies the supplied credentials against the stored password hash
 // and issues a short-lived JWT when authentication succeeds.
+
+// INPUT VALIDATION
+// (express-validator, 2026)
+
 router.post(
   '/login',
   [
