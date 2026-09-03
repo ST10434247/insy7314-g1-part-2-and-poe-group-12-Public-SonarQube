@@ -27,9 +27,11 @@ router.post(
       .normalizeEmail(),
 
     body('password')
-      .isAlphanumeric()
       .isLength({ min: 8, max: 72 })
-      .withMessage('Password must be between 8 and 72 characters long.'),
+      .withMessage('Password must be between 8 and 72 characters long.')
+      .not()
+      .matches(/\s/)
+      .withMessage('Password must not contain whitespace.'),
 
     body('role')
       .optional()
