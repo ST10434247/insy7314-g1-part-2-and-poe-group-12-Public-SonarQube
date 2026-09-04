@@ -26,14 +26,14 @@ The overall HustleHub application follows the MERN architecture. For Part 1, the
                                │
                                ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                    Node.js + Express API                     │
+│                    Node.js + Express API                    │
 │                                                             │
 │  ┌───────────────────────────────────────────────────────┐  │
 │  │                 Part 1 Security Layer                 │  │
 │  │                                                       │  │
-│  │  Helmet → JSON Limits → Validation → Authentication  │  │
+│  │  Helmet → JSON Limits → Validation → Authentication   │  │
 │  │                                                       │  │
-│  │        bcryptjs + JWT + Protected Routes             │  │
+│  │        bcryptjs + JWT + Protected Routes              │  │
 │  └───────────────────────────┬───────────────────────────┘  │
 │                              │                              │
 │                    Part 1: In-Memory Store                  │
@@ -68,7 +68,7 @@ The React frontend and MongoDB persistence are part of the overall system archit
 
 ## Security Implementation
 
-### 1. HTTPS
+### HTTPS
 
 The server runs over HTTPS using a locally generated certificate and private key.
 
@@ -83,7 +83,7 @@ SSL_CERT_PATH=../certs/cert.pem
 
 This keeps certificate files and private keys out of the source code and prevents them from being committed to the GitHub repository.
 
-### 2. Password Hashing
+### Password Hashing
 
 User passwords are never stored in plaintext.
 
@@ -91,7 +91,7 @@ The application uses `bcryptjs` with a work factor of `12` to generate a one-way
 
 The original password is therefore never retained by the application.
 
-### 3. JWT Authentication
+### JWT Authentication
 
 Successful login generates a JSON Web Token containing the authenticated user's ID and role.
 
@@ -99,7 +99,7 @@ The token is signed using a secret stored in the environment configuration rathe
 
 JWTs expire after one hour to limit the useful lifetime of a stolen token.
 
-### 4. Input Validation
+### Input Validation
 
 `express-validator` is used to validate registration and login requests before the request reaches the route logic.
 
@@ -112,17 +112,17 @@ Validation includes:
 
 Public registration is restricted to the `client` and `freelancer` roles. Users cannot assign themselves the `admin` role during registration.
 
-### 5. Error Handling
+### Error Handling
 
 The API uses controlled error responses for invalid routes, invalid input, authentication failures, and unexpected server errors.
 
 Unexpected server errors are logged on the server while the client receives a generic error message. This prevents internal implementation details such as stack traces and file paths from being exposed through API responses.
 
-### 6. Request Size Limiting
+### Request Size Limiting
 
 JSON request bodies are limited to 10 KB to reduce unnecessary resource consumption and help protect the API against oversized requests.
 
-### 7. Security Headers
+### Security Headers
 
 Helmet is used to configure HTTP security headers, including a Content Security Policy.
 
@@ -142,17 +142,6 @@ JWT_SECRET=your-own-random-secret
 SSL_KEY_PATH=../certs/key.pem
 SSL_CERT_PATH=../certs/cert.pem
 ```
-
-### Important Security Notes
-
-The real `.env` file must not be committed to GitHub.
-
-The HTTPS private key and certificate must also remain outside source control.
-
-The `.gitignore` file excludes environment files and common certificate and private-key formats.
-
----
-
 ## Project Structure
 
 ```text
@@ -190,64 +179,78 @@ HustleHub/
 - Postman or the Postman VS Code extension
 - OpenSSL for local HTTPS certificate generation
 
+## Installation
+
+### Requirements
+- Node.js
+- npm
+- Postman or the Postman VS Code extension
+- OpenSSL for local HTTPS certificate generation
+
+### Clone the Repository
+Clone the project repository and navigate into the root directory:
+```bash
+git clone <repository-url>
+cd <project-directory>
+```
+
 ### Install Dependencies
-
-Navigate to the backend directory:
-
+Navigate to the backend directory and install the required modules:
 ```bash
 cd backend
 npm install
 ```
 
 ### HTTPS Certificates
+The application expects the local HTTPS certificate and private key to be stored in a `certs` directory inside the `backend` folder. 
 
-The application expects the local HTTPS certificate and private key to be stored in the `certs` directory.
+Create the directory and navigate into it:
+```bash
+mkdir certs
+cd certs
+```
 
+Your structure should look like this:
 ```text
-certs/
+backend/certs/
 ├── cert.pem
 └── key.pem
 ```
 
-To generate the required files run the following command
+To generate the required certificate files inside the `certs` directory, run the following command:
+```bash
+openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 30 -nodes
+```
 
-```text
-  openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 30 -nodes 
+After generating the certificates, navigate back up to the `backend` root:
+```bash
+cd ..
 ```
 
 ### JWT Secret Generation
-
 To generate a secure, cryptographically strong secret key for your `JWT_SECRET` environment variable, run the following command in your terminal:
-
 ```bash
 node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 ```
-
 Copy the output string and paste it as your `JWT_SECRET` value in your `.env` file.
 
 ### Environment Configuration
-
-Create the `.env` file in the project root and provide the required configuration values.
+Create a `.env` file in the `backend` directory and provide the required configuration values.
 
 ---
 
 ## Running the Application
-
 From the `backend` directory:
-
 ```bash
 npm start
 ```
 
 The server runs on:
-
 ```text
 https://localhost:3000
 ```
+*Note: A local or self-signed certificate may cause a certificate warning in Postman or a browser. This is expected during local HTTPS development.*
 
-A local or self-signed certificate may cause a certificate warning in Postman or a browser. This is expected during local HTTPS development.
-
----
 
 ## API Endpoints
 
