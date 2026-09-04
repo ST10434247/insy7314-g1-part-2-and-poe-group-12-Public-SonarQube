@@ -18,8 +18,8 @@ The overall HustleHub application follows the MERN architecture. For Part 1, the
                          MERN Architecture
 
 ┌─────────────────────────────────────────────────────────────┐
-│                         React Frontend                       │
-│                  Client-facing application                   │
+│                         React Frontend                      │
+│                  Client-facing application                  │
 └──────────────────────────────┬──────────────────────────────┘
                                │
                             HTTPS
