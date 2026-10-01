@@ -15,6 +15,9 @@ const https = require('https');
 const express = require('express');
 const helmet = require('helmet');
 const authRoutes = require('./routes/auth');
+const bookingRoutes = require('./routes/bookings');
+const transactionRoutes = require('./routes/transactions');
+const reviewRoutes = require('./routes/reviews');
 const app = express();
 
 
@@ -39,23 +42,31 @@ app.use(
 // consumption and help protect the API against oversized request attacks.
 app.use(express.json({ limit: '10kb' }));
 
-// Authentication routes handle user registration, login and access to protected resources.
+// Authentication routes handle registration, login and authentication-related requests.
 app.use('/api/auth', authRoutes);
 
-// Mount all gig-related endpoints under /api/gigs.
+// Mount gig endpoints for creating, browsing, updating and deleting gigs.
 app.use('/api/gigs', gigRoutes);
 
-// Returns a controlled response when a client requests a route that does not exist.
-// This prevents unnecessary framework or server information from being returned to the client.
+// Mount booking endpoints before the 404 handler so Express can reach them.
+app.use('/api/bookings', bookingRoutes);
+
+// Mount transaction endpoints for simulated payments and income tracking.
+app.use('/api/transactions', transactionRoutes);
+
+// Mount review endpoints.
+app.use('/api/reviews', reviewRoutes);
+
+// Return a controlled response when no route matches the request.
+// This must come after all application routes.
 app.use((req, res) => {
   res.status(404).json({
     error: 'Route not found'
   });
 });
 
-// Centralised error handling ensures unexpected errors are logged on the server
-// but only a generic message is returned to the client, preventing internal
-// details such as stack traces or file paths from being exposed.
+// Handle unexpected errors after all routes and other middleware.
+// Internal details are logged on the server, not returned to clients.
 app.use((err, req, res, next) => {
   console.error(err);
 
@@ -63,8 +74,6 @@ app.use((err, req, res, next) => {
     error: 'An internal server error occurred.'
   });
 });
-
-
 
 const PORT = process.env.PORT || 3000;
 

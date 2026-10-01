@@ -1,0 +1,554 @@
+{
+  "info": {
+    "_postman_id": "389b563e-f8c7-4dd9-8a90-6b5e014cf2cd",
+    "name": "HustleHub API Tests",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "56961284"
+  },
+  "item": [
+    {
+      "name": "Gigs - List All Active Gigs",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://localhost:3000/api/gigs",
+          "protocol": "https",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "gigs"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Gigs - Create Gig",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhYmUyMDhmZmRhZWI1NmE3NzIwZDVlZiIsInJvbGUiOiJmcmVlbGFuY2VyIiwiaWF0IjoxNzkwODQ1MDk3LCJleHAiOjE3OTA4NDg2OTd9.Ll__W3y6LxQYE0ENDzly__66RmsrolhKRIpdjjnRqbk",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"title\": \"Wildlife Photography\",\r\n  \"description\": \"Professional wildlife photography services for conservation projects and nature publications.\",\r\n  \"category\": \"Photography\",\r\n  \"price\": 1500,\r\n  \"deliveryDays\": 7\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://localhost:3000/api/gigs",
+          "protocol": "https",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "gigs"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Auth - login Freelancer",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"email\": \"freelancer-test@example.com\",\r\n  \"password\": \"TestPass123!\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://localhost:3000/api/auth/login",
+          "protocol": "https",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Auth - Register Freelancer",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"name\": \"Test Freelancer\",\r\n  \"email\": \"freelancer-test@example.com\",\r\n  \"password\": \"TestPass123!\",\r\n  \"role\": \"freelancer\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://localhost:3000/api/auth/register",
+          "protocol": "https",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "auth",
+            "register"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Gigs - get Gig by ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://localhost:3000/api/gigs/6abe210cfdaeb56a7720d5f0",
+          "protocol": "https",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "gigs",
+            "6abe210cfdaeb56a7720d5f0"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Gigs - Update Gig",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhYmUyMDhmZmRhZWI1NmE3NzIwZDVlZiIsInJvbGUiOiJmcmVlbGFuY2VyIiwiaWF0IjoxNzkwODQ1MDk3LCJleHAiOjE3OTA4NDg2OTd9.Ll__W3y6LxQYE0ENDzly__66RmsrolhKRIpdjjnRqbk",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"title\": \"Wildlife and Nature Photography\",\r\n  \"price\": 2000\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://localhost:3000/api/gigs/6abe210cfdaeb56a7720d5f0",
+          "protocol": "https",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "gigs",
+            "6abe210cfdaeb56a7720d5f0"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Gigs - Rejact Invalid Update Data",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhYmUyMDhmZmRhZWI1NmE3NzIwZDVlZiIsInJvbGUiOiJmcmVlbGFuY2VyIiwiaWF0IjoxNzkwODQ1MDk3LCJleHAiOjE3OTA4NDg2OTd9.Ll__W3y6LxQYE0ENDzly__66RmsrolhKRIpdjjnRqbk",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"price\": -50\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://localhost:3000/api/gigs/6abe210cfdaeb56a7720d5f0",
+          "protocol": "https",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "gigs",
+            "6abe210cfdaeb56a7720d5f0"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Gigs - Reject Empty Update",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhYmUyMDhmZmRhZWI1NmE3NzIwZDVlZiIsInJvbGUiOiJmcmVlbGFuY2VyIiwiaWF0IjoxNzkwODQ1MDk3LCJleHAiOjE3OTA4NDg2OTd9.Ll__W3y6LxQYE0ENDzly__66RmsrolhKRIpdjjnRqbk",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://localhost:3000/api/gigs/6abe210cfdaeb56a7720d5f0",
+          "protocol": "https",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "gigs",
+            "6abe210cfdaeb56a7720d5f0"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Auth - Register Second Freelancer",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"name\": \"Second Test Freelancer\",\r\n  \"email\": \"freelancer-test-2@example.com\",\r\n  \"password\": \"TestPass123!\",\r\n  \"role\": \"freelancer\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://localhost:3000/api/auth/register",
+          "protocol": "https",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "auth",
+            "register"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Auth - Login Second Freelancer",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"email\": \"freelancer-test-2@example.com\",\r\n  \"password\": \"TestPass123!\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://localhost:3000/api/auth/login",
+          "protocol": "https",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Gigs - Reject Update by Non-Owner",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhYmUyMWRkZmRhZWI1NmE3NzIwZDVmMSIsInJvbGUiOiJmcmVlbGFuY2VyIiwiaWF0IjoxNzkwODQ1Nzk0LCJleHAiOjE3OTA4NDkzOTR9.aGDgrsb4CYLXH0JZ4B5iAps9KdQDDxVG6dgkENuJaEw",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"title\": \"Wildlife and Nature Photography\",\r\n  \"price\": 200\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://localhost:3000/api/gigs/6abe210cfdaeb56a7720d5f0",
+          "protocol": "https",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "gigs",
+            "6abe210cfdaeb56a7720d5f0"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Gig - Delete Gig",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": ""
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Gigs - Reject Create Without Token",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"title\": \"Wildlife Photography\",\r\n  \"description\": \"Professional wildlife photography services for conservation projects and nature publications.\",\r\n  \"category\": \"Photography\",\r\n  \"price\": 1500,\r\n  \"deliveryDays\": 7\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://localhost:3000/api/gigs",
+          "protocol": "https",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "gigs"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Gigs - Reject Create as Client",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhYmUyNGMyZmRhZWI1NmE3NzIwZDVmNCIsInJvbGUiOiJjbGllbnQiLCJpYXQiOjE3OTA4NDYxNTYsImV4cCI6MTc5MDg0OTc1Nn0.fZheZSdPakrggNIaj_z3asbjk6PmWlfi5Bre8c7xnEs",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"title\": \"Wildlife Photography\",\r\n  \"description\": \"Professional wildlife photography services for conservation projects and nature publications.\",\r\n  \"category\": \"Photography\",\r\n  \"price\": 1500,\r\n  \"deliveryDays\": 7\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://localhost:3000/api/gigs",
+          "protocol": "https",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "gigs"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Gigs - Reject Invalid Gig Data",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhYmUyMDhmZmRhZWI1NmE3NzIwZDVlZiIsInJvbGUiOiJmcmVlbGFuY2VyIiwiaWF0IjoxNzkwODQ1MDk3LCJleHAiOjE3OTA4NDg2OTd9.Ll__W3y6LxQYE0ENDzly__66RmsrolhKRIpdjjnRqbk",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"title\": \"\",\r\n  \"description\": \"Short\",\r\n  \"category\": \"\",\r\n  \"price\": -100,\r\n  \"deliveryDays\": 0\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://localhost:3000/api/gigs",
+          "protocol": "https",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "gigs"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Gigs - Reject Invalid ID",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://localhost:3000/api/gigs/not-a-valid-id",
+          "protocol": "https",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "gigs",
+            "not-a-valid-id"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Gigs - Reject Missing Reqiured Fields",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhYmUyMDhmZmRhZWI1NmE3NzIwZDVlZiIsInJvbGUiOiJmcmVlbGFuY2VyIiwiaWF0IjoxNzkwODQ1MDk3LCJleHAiOjE3OTA4NDg2OTd9.Ll__W3y6LxQYE0ENDzly__66RmsrolhKRIpdjjnRqbk",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"title\": \"Wildlife Photography\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://localhost:3000/api/gigs",
+          "protocol": "https",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "gigs"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
