@@ -1,10 +1,4 @@
 const path = require('path');
-const fs = require('fs');
-const https = require('https');
-const express = require('express');
-const helmet = require('helmet');
-const authRoutes = require('./routes/auth');
-const app = express();
 
 // Loads environment variables from the project root so configuration remains
 // separate from the backend source code and is available regardless of the
@@ -12,6 +6,15 @@ const app = express();
 require('dotenv').config({
   path: path.resolve(__dirname, '../.env')
 });
+
+const connectDB = require('./config/db');
+const fs = require('fs');
+const https = require('https');
+const express = require('express');
+const helmet = require('helmet');
+const authRoutes = require('./routes/auth');
+const app = express();
+
 
 // Security middleware adds HTTP security headers and restricts which resources
 // the application is allowed to load, reducing the risk of common browser-based attacks.
@@ -56,22 +59,32 @@ app.use((err, req, res, next) => {
   });
 });
 
-// HTTPS configuration loads the certificate and private key from environment-defined
-// paths. The paths are resolved relative to the backend directory so the application
-// behaves consistently regardless of which directory the server is started from.
-const sslOptions = {
-  key: fs.readFileSync(
-    path.resolve(__dirname, process.env.SSL_KEY_PATH || '../certs/key.pem')
-  ),
-  cert: fs.readFileSync(
-    path.resolve(__dirname, process.env.SSL_CERT_PATH || '../certs/cert.pem')
-  )
-};
+
 
 const PORT = process.env.PORT || 3000;
 
-// Starts the application over HTTPS so authentication credentials and JWTs are
-// encrypted while being transmitted between the client and the server.
-https.createServer(sslOptions, app).listen(PORT, () => {
-  console.log(`HTTPS Server running on port ${PORT}`);
-});
+// Connect to the database before accepting incoming requests.
+const startServer = async () => {
+  try {
+    await connectDB();
+
+    // HTTPS configuration loads the certificate and private key from environment-defined
+    // paths. These files must exist before the server can start.
+    const sslOptions = {
+      key: fs.readFileSync(
+        path.resolve(__dirname, process.env.SSL_KEY_PATH || '../certs/key.pem')
+      ),
+      cert: fs.readFileSync(
+        path.resolve(__dirname, process.env.SSL_CERT_PATH || '../certs/cert.pem')
+      )
+    };
+    https.createServer(sslOptions, app).listen(PORT, () => {
+      console.log(`HTTPS Server running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error('Server startup failed:', error.message);
+    process.exit(1);
+  }
+};
+
+startServer();
