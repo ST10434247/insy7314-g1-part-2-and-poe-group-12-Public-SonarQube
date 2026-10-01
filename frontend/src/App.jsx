@@ -44,13 +44,13 @@ function Navigation() {
         const loginData = await loginRes.json();
         
         if (loginRes.ok) {
-          login({ email, role: data.user.role }, loginData.token);
+          login(loginData.user, loginData.token);
         } else {
           setErrorMsg(loginData.error || 'Auto-login failed after registration.');
         }
       } else {
         // Save user details with selected role and the verified JWT token
-        login({ email, role }, data.token);
+        login(data.user, data.token);
       }
 
       // Clear password field on successful auth
