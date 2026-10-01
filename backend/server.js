@@ -7,6 +7,8 @@ require('dotenv').config({
   path: path.resolve(__dirname, '../.env')
 });
 
+// Import the gig routes for creating, viewing, updating, and deleting gigs.
+const gigRoutes = require('./routes/gigs');
 const connectDB = require('./config/db');
 const fs = require('fs');
 const https = require('https');
@@ -39,6 +41,9 @@ app.use(express.json({ limit: '10kb' }));
 
 // Authentication routes handle user registration, login and access to protected resources.
 app.use('/api/auth', authRoutes);
+
+// Mount all gig-related endpoints under /api/gigs.
+app.use('/api/gigs', gigRoutes);
 
 // Returns a controlled response when a client requests a route that does not exist.
 // This prevents unnecessary framework or server information from being returned to the client.
