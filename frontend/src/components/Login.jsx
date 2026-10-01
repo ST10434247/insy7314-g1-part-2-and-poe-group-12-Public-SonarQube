@@ -18,7 +18,7 @@ const Login = () => {
       
       if (response.ok) {
         // Decode token or pass user details returned from your API
-        login({ email }, data.token);
+        login(data.user, data.token);
         alert('Login successful!');
       } else {
         alert(data.error || 'Login failed');

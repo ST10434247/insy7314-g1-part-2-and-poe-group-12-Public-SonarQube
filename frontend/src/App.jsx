@@ -1,9 +1,11 @@
-import React, { useState, useContext } from 'react';
+
+import React, { useContext, useState } from 'react';
 import { AuthProvider, AuthContext } from './context/AuthContext';
 import GigList from './components/GigList';
 import TaxDashboard from './components/TaxDashboard';
-import './App.css';
 import BookingManagement from './components/BookingManagement';
+import ClientBookings from './components/ClientBookings';
+import './App.css';
 
 function Navigation() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -11,14 +13,17 @@ function Navigation() {
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('client');
   const [errorMsg, setErrorMsg] = useState('');
+
   const { user, login, logout } = useContext(AuthContext);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
 
-    const endpoint = isSignUp ? '/api/auth/register' : '/api/auth/login';
-    // Send role along with email and password
+    const endpoint = isSignUp
+      ? '/api/auth/register'
+      : '/api/auth/login';
+
     const payload = { email, password, role };
 
     try {
@@ -36,25 +41,25 @@ function Navigation() {
       }
 
       if (isSignUp) {
-        // Automatically perform login after registering
         const loginRes = await fetch('/api/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password })
         });
+
         const loginData = await loginRes.json();
-        
+
         if (loginRes.ok) {
           login(loginData.user, loginData.token);
         } else {
-          setErrorMsg(loginData.error || 'Auto-login failed after registration.');
+          setErrorMsg(
+            loginData.error || 'Auto-login failed after registration.'
+          );
         }
       } else {
-        // Save user details with selected role and the verified JWT token
         login(data.user, data.token);
       }
 
-      // Clear password field on successful auth
       setPassword('');
     } catch (err) {
       setErrorMsg('Network error. Unable to connect to backend.');
@@ -65,51 +70,89 @@ function Navigation() {
     <div className="nav-bar">
       {user ? (
         <div className="logged-in-bar">
-          <span>Welcome, <strong>{user.email}</strong> ({user.role})</span>
+          <span>
+            Welcome, <strong>{user.email}</strong> ({user.role})
+          </span>
+
           {user.role === 'freelancer' && <TaxDashboard />}
+
           <button onClick={logout}>Logout</button>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="login-form">
-          <input 
-            type="email" 
-            placeholder="Enter email" 
-            value={email} 
+          <input
+            type="email"
+            placeholder="Enter email"
+            value={email}
             onChange={(e) => setEmail(e.target.value)}
-            required 
+            required
           />
-          <input 
-            type="password" 
-            placeholder="Enter password" 
-            value={password} 
+
+          <input
+            type="password"
+            placeholder="Enter password"
+            value={password}
             onChange={(e) => setPassword(e.target.value)}
-            required 
+            required
           />
-          {/* User Type selection enabled for both Login & Sign Up */}
-          <select value={role} onChange={(e) => setRole(e.target.value)}>
-            <option value="client">Client</option>
-            <option value="freelancer">Freelancer</option>
-          </select>
 
           <button type="submit">
             {isSignUp ? 'Sign Up' : 'Log In'}
           </button>
-          
-          <button 
-            type="button" 
+
+          <button
+            type="button"
             className="toggle-auth-btn"
             onClick={() => {
               setIsSignUp(!isSignUp);
               setErrorMsg('');
             }}
-            style={{ marginLeft: '8px', background: 'transparent', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
+            style={{
+              marginLeft: '8px',
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              textDecoration: 'underline'
+            }}
           >
             {isSignUp ? 'Need to Log In?' : 'Need an Account?'}
           </button>
-          
-          {errorMsg && <div style={{ color: 'red', fontSize: '12px', width: '100%', marginTop: '4px' }}>{errorMsg}</div>}
+
+          {errorMsg && (
+            <div
+              style={{
+                color: 'red',
+                fontSize: '12px',
+                width: '100%',
+                marginTop: '4px'
+              }}
+            >
+              {errorMsg}
+            </div>
+          )}
         </form>
       )}
+    </div>
+  );
+}
+
+function AppContent() {
+  const { user } = useContext(AuthContext);
+
+  return (
+    <div className="app-container">
+      <header className="app-header">
+        <h1>WorkMarket Gigs</h1>
+        <Navigation />
+      </header>
+
+      <hr className="hr-divider" />
+
+      <GigList />
+
+      {user?.role === 'client' && <ClientBookings />}
+
+      {user?.role === 'freelancer' && <BookingManagement />}
     </div>
   );
 }
@@ -117,15 +160,7 @@ function Navigation() {
 export default function App() {
   return (
     <AuthProvider>
-      <div className="app-container">
-        <header className="app-header">
-          <h1>WorkMarket Gigs</h1>
-          <Navigation />
-        </header>
-        <hr className="hr-divider" />
-        <GigList />
-        <BookingManagement />
-      </div>
+      <AppContent />
     </AuthProvider>
   );
 }
