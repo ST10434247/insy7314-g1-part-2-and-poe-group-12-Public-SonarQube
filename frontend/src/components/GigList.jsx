@@ -1,45 +1,67 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import CardInput from './CardInput';
 import PublishGig from './PublishGig';
 
 export default function GigList() {
   const [gigs, setGigs] = useState([]);
   const [selectedGig, setSelectedGig] = useState(null);
-  const [validCardNumber, setValidCardNumber] = useState(null);
   const { token, user } = useContext(AuthContext);
 
-  useEffect(() => {
-    fetch('/api/gigs')
-      .then((res) => res.json())
-      .then((data) => setGigs(data));
-  }, []);
+// Load active gigs from the backend when the marketplace opens.
+useEffect(() => {
+  const loadGigs = async () => {
+    try {
+      const response = await fetch('/api/gigs');
+
+      // Handle unsuccessful responses instead of treating them as gig data.
+      if (!response.ok) {
+        throw new Error('Failed to load gigs.');
+      }
+
+      const data = await response.json();
+
+      // The API returns an object containing a gigs array.
+      setGigs(data.gigs || []);
+    } catch (error) {
+      console.error('Failed to load gigs:', error);
+      setGigs([]);
+    }
+  };
+
+  loadGigs();
+}, []);
 
   const handleGigPublished = (newGig) => {
     setGigs((prevGigs) => [newGig, ...prevGigs]);
   };
 
-  const handleBooking = async () => {
-    if (!validCardNumber) {
-      return alert('Please enter a valid payment card.');
-    }
 
+const handleBooking = async () => {
+  try {
     const res = await fetch('/api/bookings', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`
       },
-      body: JSON.stringify({ gigId: selectedGig._id, cardNumber: validCardNumber })
+      body: JSON.stringify({
+        gigId: selectedGig._id
+      })
     });
 
-    if (res.ok) {
-      alert('Booking confirmed successfully!');
-      setSelectedGig(null);
-    } else {
-      alert('Booking failed.');
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || 'Booking failed.');
     }
-  };
+
+    alert('Booking request submitted. Waiting for freelancer acceptance.');
+    setSelectedGig(null);
+  } catch (error) {
+    console.error('Booking error:', error);
+    alert(error.message || 'Unable to submit booking.');
+  }
+};
 
   return (
     <div>
@@ -66,20 +88,27 @@ export default function GigList() {
         ))}
       </div>
 
+      
       {selectedGig && (
         <div className="modal-overlay">
           <div className="booking-modal">
-            <h3>Checkout: {selectedGig.title}</h3>
-            <CardInput onValidCard={(card) => setValidCardNumber(card)} />
+            <h3>Request Booking: {selectedGig.title}</h3>
+            <p>
+              Price: ${selectedGig.price}
+            </p>
+            <p>
+              Submit this booking request to the freelancer?
+              Payment will be available after acceptance.
+            </p>
+
             <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
-              <button 
-                onClick={handleBooking} 
-                disabled={!validCardNumber}
+              <button
+                onClick={handleBooking}
                 style={{ flex: 1 }}
               >
-                Confirm & Pay ${selectedGig.price}
+                Submit Request
               </button>
-              <button 
+              <button
                 onClick={() => setSelectedGig(null)}
                 style={{ background: '#e4e6eb', color: '#001e00' }}
               >

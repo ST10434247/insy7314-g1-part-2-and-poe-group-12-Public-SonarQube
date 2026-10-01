@@ -3,6 +3,7 @@ import { AuthProvider, AuthContext } from './context/AuthContext';
 import GigList from './components/GigList';
 import TaxDashboard from './components/TaxDashboard';
 import './App.css';
+import BookingManagement from './components/BookingManagement';
 
 function Navigation() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -123,6 +124,7 @@ export default function App() {
         </header>
         <hr className="hr-divider" />
         <GigList />
+        <BookingManagement />
       </div>
     </AuthProvider>
   );

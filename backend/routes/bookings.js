@@ -66,7 +66,19 @@ router.post(
                     error: 'You cannot book your own gig.'
                 });
             }
+            
+            // Prevent duplicate pending or accepted bookings for the same gig.
+            const existingBooking = await Booking.findOne({
+                gig: gig._id,
+                client: req.user.id,
+                status: { $in: ['pending', 'accepted'] }
+            });
 
+            if (existingBooking) {
+                return res.status(409).json({
+                    error: 'You already have an active booking for this gig.'
+                });
+            }
             // Create a booking using trusted values from the gig and token.
             const booking = await Booking.create({
                 gig: gig._id,
