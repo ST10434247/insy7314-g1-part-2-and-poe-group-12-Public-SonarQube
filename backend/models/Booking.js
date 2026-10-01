@@ -4,12 +4,15 @@ const mongoose = require('mongoose');
 // Define the allowed booking statuses.
 // These represent the booking's lifecycle.
 const BOOKING_STATUSES = [
-  'pending',
-  'accepted',
-  'rejected',
-  'cancelled',
-  'completed'
+    'pending',
+    'accepted',
+    'rejected',
+    'cancelled',
+    'awaiting_confirmation',
+    'completed',
+    'disputed'
 ];
+
 
 // Define the structure of a booking document.
 const bookingSchema = new mongoose.Schema(
@@ -63,6 +66,19 @@ const bookingSchema = new mongoose.Schema(
       },
       default: 'pending',
       required: true
+    },
+    
+    // Indicates whether the freelancer has requested admin review
+    // after a client disputes the submitted work.
+    adminReviewRequested: {
+      type: Boolean,
+      default: false
+    },
+
+    // Records when the admin review was requested.
+    adminReviewRequestedAt: {
+      type: Date,
+      default: null
     }
   },
   {

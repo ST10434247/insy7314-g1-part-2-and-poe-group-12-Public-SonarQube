@@ -17,7 +17,7 @@ const helmet = require('helmet');
 const authRoutes = require('./routes/auth');
 const bookingRoutes = require('./routes/bookings');
 const transactionRoutes = require('./routes/transactions');
-const reviewRoutes = require('./routes/reviews');
+const adminRoutes = require('./routes/admin');
 const app = express();
 
 
@@ -51,11 +51,11 @@ app.use('/api/gigs', gigRoutes);
 // Mount booking endpoints before the 404 handler so Express can reach them.
 app.use('/api/bookings', bookingRoutes);
 
+// Admin endpoints for reviewing and resolving disputed bookings.
+app.use('/api/admin', adminRoutes);
+
 // Mount transaction endpoints for simulated payments and income tracking.
 app.use('/api/transactions', transactionRoutes);
-
-// Mount review endpoints.
-app.use('/api/reviews', reviewRoutes);
 
 // Return a controlled response when no route matches the request.
 // This must come after all application routes.

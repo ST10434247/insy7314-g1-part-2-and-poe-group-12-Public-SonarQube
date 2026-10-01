@@ -12,7 +12,9 @@ const ALLOWED_STATUSES = [
     'accepted',
     'rejected',
     'cancelled',
-    'completed'
+    'awaiting_confirmation',
+    'completed',
+    'disputed'
 ];
 
 /*
@@ -66,7 +68,7 @@ router.post(
                     error: 'You cannot book your own gig.'
                 });
             }
-            
+
             // Prevent duplicate pending or accepted bookings for the same gig.
             const existingBooking = await Booking.findOne({
                 gig: gig._id,
@@ -190,12 +192,17 @@ router.get(
     }
 );
 
+
 /*
  * PATCH /api/bookings/:id/status
  *
  * Only valid status transitions are permitted.
  * The user's role and booking participation determine which transitions
  * they are allowed to make.
+ *
+ * Completion workflow:
+ * 1. Freelancer submits completion.
+ * 2. Client confirms or disputes completion.
  */
 router.patch(
     '/:id/status',
@@ -206,12 +213,14 @@ router.patch(
             const { id } = req.params;
             const { status } = req.body;
 
+            // Validate the booking ID before querying MongoDB.
             if (!mongoose.isValidObjectId(id)) {
                 return res.status(400).json({
                     error: 'Invalid booking ID.'
                 });
             }
 
+            // Reject missing or unsupported status values.
             if (!ALLOWED_STATUSES.includes(status)) {
                 return res.status(400).json({
                     error: 'A valid status is required.'
@@ -226,11 +235,12 @@ router.patch(
                 });
             }
 
+            // Identify the authenticated user's relationship to the booking.
             const isClient = booking.client.toString() === req.user.id;
             const isFreelancer =
                 booking.freelancer.toString() === req.user.id;
 
-            // Only participants may change a booking.
+            // Only the client or freelancer involved may change the booking.
             if (!isClient && !isFreelancer) {
                 return res.status(404).json({
                     error: 'Booking not found.'
@@ -239,7 +249,7 @@ router.patch(
 
             let permitted = false;
 
-            // While pending, the freelancer decides whether to accept or reject.
+            // A freelancer can accept or reject a pending booking.
             if (
                 booking.status === 'pending' &&
                 isFreelancer &&
@@ -248,7 +258,7 @@ router.patch(
                 permitted = true;
             }
 
-            // A client can cancel a booking that has not been accepted yet.
+            // A client can cancel a booking that is still pending.
             if (
                 booking.status === 'pending' &&
                 isClient &&
@@ -257,20 +267,49 @@ router.patch(
                 permitted = true;
             }
 
-            // Either participant may cancel or complete an accepted booking.
+            // Either participant can cancel an accepted booking.
             if (
                 booking.status === 'accepted' &&
-                ['cancelled', 'completed'].includes(status)
+                ['cancelled'].includes(status)
             ) {
                 permitted = true;
             }
 
+            // Only the freelancer can submit work for client confirmation.
+            if (
+                booking.status === 'accepted' &&
+                isFreelancer &&
+                status === 'awaiting_confirmation'
+            ) {
+                permitted = true;
+            }
+
+            // Only the client can confirm or dispute submitted work.
+            if (
+                booking.status === 'awaiting_confirmation' &&
+                isClient &&
+                ['completed', 'disputed'].includes(status)
+            ) {
+                permitted = true;
+            }
+
+            // A client can withdraw a dispute and confirm completion.
+            if (
+                booking.status === 'disputed' &&
+                isClient &&
+                status === 'completed'
+            ) {
+                permitted = true;
+            }
+
+            // Reject transitions that do not match the workflow.
             if (!permitted) {
                 return res.status(403).json({
                     error: 'This status change is not permitted.'
                 });
             }
 
+            // Save the approved status transition.
             booking.status = status;
             await booking.save();
 
@@ -283,6 +322,74 @@ router.patch(
 
             return res.status(500).json({
                 error: 'Unable to update booking status.'
+            });
+        }
+    }
+);
+
+/*
+ * POST /api/bookings/:id/request-review
+ *
+ * A freelancer can request admin review of a disputed booking.
+ * Only one review request can be submitted per booking.
+ */
+router.post(
+    '/:id/request-review',
+    authenticateToken,
+    authorizeRoles('freelancer'),
+    async (req, res) => {
+        try {
+            const { id } = req.params;
+
+            if (!mongoose.isValidObjectId(id)) {
+                return res.status(400).json({
+                    error: 'Invalid booking ID.'
+                });
+            }
+
+            const booking = await Booking.findById(id);
+
+            if (!booking) {
+                return res.status(404).json({
+                    error: 'Booking not found.'
+                });
+            }
+
+            // Only the freelancer involved in the booking can request review.
+            if (booking.freelancer.toString() !== req.user.id) {
+                return res.status(404).json({
+                    error: 'Booking not found.'
+                });
+            }
+
+            // Admin review is only available for disputed bookings.
+            if (booking.status !== 'disputed') {
+                return res.status(400).json({
+                    error: 'Only disputed bookings can be escalated.'
+                });
+            }
+
+            // Prevent duplicate review requests.
+            if (booking.adminReviewRequested) {
+                return res.status(409).json({
+                    error: 'Admin review has already been requested.'
+                });
+            }
+
+            booking.adminReviewRequested = true;
+            booking.adminReviewRequestedAt = new Date();
+
+            await booking.save();
+
+            return res.status(200).json({
+                message: 'Admin review requested successfully.',
+                booking
+            });
+        } catch (error) {
+            console.error('Request admin review error:', error);
+
+            return res.status(500).json({
+                error: 'Unable to request admin review.'
             });
         }
     }
