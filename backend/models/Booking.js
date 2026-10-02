@@ -67,7 +67,7 @@ const bookingSchema = new mongoose.Schema(
       default: 'pending',
       required: true
     },
-    
+
     // Indicates whether the freelancer has requested admin review
     // after a client disputes the submitted work.
     adminReviewRequested: {
