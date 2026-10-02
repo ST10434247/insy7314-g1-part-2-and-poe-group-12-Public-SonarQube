@@ -1,11 +1,12 @@
-
 import React, { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../context/AuthContext';
 
 export default function BookingManagement() {
   const { token, user } = useContext(AuthContext);
+
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [updatingId, setUpdatingId] = useState(null);
   const [error, setError] = useState('');
 
   // Load bookings belonging to the logged-in freelancer.
@@ -40,8 +41,11 @@ export default function BookingManagement() {
     }
   }, [user, token]);
 
-  // Accept or reject a pending booking.
+  // Update a booking's status through the backend.
   const updateBooking = async (bookingId, status) => {
+    setUpdatingId(bookingId);
+    setError('');
+
     try {
       const response = await fetch(`/api/bookings/${bookingId}/status`, {
         method: 'PATCH',
@@ -62,6 +66,38 @@ export default function BookingManagement() {
       await loadBookings();
     } catch (err) {
       setError(err.message || 'Unable to update booking.');
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  // Escalate a disputed booking for administrator review.
+  const requestAdminReview = async (bookingId) => {
+    setUpdatingId(bookingId);
+    setError('');
+
+    try {
+      const response = await fetch(
+        `/api/bookings/${bookingId}/request-review`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Unable to request admin review.');
+      }
+
+      await loadBookings();
+    } catch (err) {
+      setError(err.message || 'Unable to request admin review.');
+    } finally {
+      setUpdatingId(null);
     }
   };
 
@@ -74,11 +110,15 @@ export default function BookingManagement() {
     <section className="booking-management">
       <h2>Booking Requests</h2>
 
-      <button onClick={loadBookings} disabled={loading}>
+      <button onClick={loadBookings} disabled={loading || !!updatingId}>
         {loading ? 'Loading...' : 'Refresh Bookings'}
       </button>
 
-      {error && <p role="alert" style={{ color: 'red' }}>{error}</p>}
+      {error && (
+        <p role="alert" style={{ color: 'red' }}>
+          {error}
+        </p>
+      )}
 
       {!loading && bookings.length === 0 && !error && (
         <p>No booking requests found.</p>
@@ -88,11 +128,14 @@ export default function BookingManagement() {
         {bookings.map((booking) => (
           <div className="booking-card" key={booking._id}>
             <h3>{booking.gig?.title || 'Gig'}</h3>
+
             <p>
-              Client: {booking.client?.name || booking.client?.email || 'Unknown'}
+              Client:{' '}
+              {booking.client?.name || booking.client?.email || 'Unknown'}
             </p>
+
             <p>Price: ${booking.price}</p>
-            <p>Status: {booking.status}</p>
+            <p>Status: {booking.status.replaceAll('_', ' ')}</p>
 
             {booking.requirements && (
               <p>Requirements: {booking.requirements}</p>
@@ -102,14 +145,45 @@ export default function BookingManagement() {
               <div>
                 <button
                   onClick={() => updateBooking(booking._id, 'accepted')}
+                  disabled={updatingId === booking._id}
                 >
                   Accept
                 </button>
+
                 <button
                   onClick={() => updateBooking(booking._id, 'rejected')}
+                  disabled={updatingId === booking._id}
                 >
                   Reject
                 </button>
+              </div>
+            )}
+
+            {booking.status === 'accepted' && (
+              <div>
+                <button
+                  onClick={() =>
+                    updateBooking(booking._id, 'awaiting_confirmation')
+                  }
+                  disabled={updatingId === booking._id}
+                >
+                  Submit Work for Confirmation
+                </button>
+              </div>
+            )}
+
+            {booking.status === 'disputed' && (
+              <div>
+                {booking.adminReviewRequested ? (
+                  <p>Admin review has been requested.</p>
+                ) : (
+                  <button
+                    onClick={() => requestAdminReview(booking._id)}
+                    disabled={updatingId === booking._id}
+                  >
+                    Request Admin Review
+                  </button>
+                )}
               </div>
             )}
           </div>

@@ -5,7 +5,11 @@ import PublishGig from './PublishGig';
 export default function GigList() {
   const [gigs, setGigs] = useState([]);
   const [selectedGig, setSelectedGig] = useState(null);
+  const [requirements, setRequirements] = useState('');
+  const [bookingError, setBookingError] = useState('');
+  const [bookingLoading, setBookingLoading] = useState(false);
   const { token, user } = useContext(AuthContext);
+
 
 // Load active gigs from the backend when the marketplace opens.
 useEffect(() => {
@@ -37,6 +41,14 @@ useEffect(() => {
 
 
 const handleBooking = async () => {
+  if (!token || !selectedGig) {
+    setBookingError('Please log in and select a gig.');
+    return;
+  }
+
+  setBookingLoading(true);
+  setBookingError('');
+
   try {
     const res = await fetch('/api/bookings', {
       method: 'POST',
@@ -45,21 +57,26 @@ const handleBooking = async () => {
         Authorization: `Bearer ${token}`
       },
       body: JSON.stringify({
-        gigId: selectedGig._id
+        gigId: selectedGig._id,
+        requirements: requirements.trim()
       })
     });
 
     const data = await res.json();
 
     if (!res.ok) {
-      throw new Error(data.error || 'Booking failed.');
+      throw new Error(
+        data.error || data.message || 'Booking failed.'
+      );
     }
 
     alert('Booking request submitted. Waiting for freelancer acceptance.');
     setSelectedGig(null);
+    setRequirements('');
   } catch (error) {
-    console.error('Booking error:', error);
-    alert(error.message || 'Unable to submit booking.');
+    setBookingError(error.message || 'Unable to submit booking.');
+  } finally {
+    setBookingLoading(false);
   }
 };
 
@@ -78,9 +95,17 @@ const handleBooking = async () => {
               <p>{gig.description}</p>
             </div>
             <div className="gig-card-footer">
-              <p className="gig-price">${gig.price}</p>
+              <p className="gig-price">R{gig.price}</p>
               {user?.role === 'client' && (
-                <button onClick={() => setSelectedGig(gig)}>Book Service</button>
+                <button
+                  onClick={() => {
+                    setSelectedGig(gig);
+                    setRequirements('');
+                    setBookingError('');
+                  }}
+                >
+                  Book Service
+                </button>
               )}
               {!user && <small className="login-prompt">Log in to book</small>}
             </div>
@@ -94,22 +119,49 @@ const handleBooking = async () => {
           <div className="booking-modal">
             <h3>Request Booking: {selectedGig.title}</h3>
             <p>
-              Price: ${selectedGig.price}
+              Price: R{selectedGig.price}
             </p>
             <p>
               Submit this booking request to the freelancer?
               Payment will be available after acceptance.
             </p>
+            <label htmlFor="booking-requirements">
+              Project requirements
+            </label>
 
+            <textarea
+              id="booking-requirements"
+              value={requirements}
+              onChange={(e) => setRequirements(e.target.value)}
+              maxLength={2000}
+              rows={4}
+              placeholder="Describe what you need from the freelancer..."
+              style={{ width: '100%', marginTop: '8px' }}
+            />
+
+            <small>{requirements.length}/2000 characters</small>
+
+            {bookingError && (
+              <p role="alert" style={{ color: 'red' }}>
+                {bookingError}
+              </p>
+            )}
             <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
               <button
                 onClick={handleBooking}
+                disabled={bookingLoading}
                 style={{ flex: 1 }}
               >
-                Submit Request
+                {bookingLoading ? 'Submitting...' : 'Submit Request'}
               </button>
+
               <button
-                onClick={() => setSelectedGig(null)}
+                onClick={() => {
+                  setSelectedGig(null);
+                  setRequirements('');
+                  setBookingError('');
+                }}
+                disabled={bookingLoading}
                 style={{ background: '#e4e6eb', color: '#001e00' }}
               >
                 Cancel

@@ -20,6 +20,9 @@ const transactionRoutes = require('./routes/transactions');
 const adminRoutes = require('./routes/admin');
 const app = express();
 
+// Use Google DNS to resolve MongoDB Atlas SRV records.
+const dns = require('node:dns');
+dns.setServers(['8.8.8.8']);
 
 // Security middleware adds HTTP security headers and restricts which resources
 // the application is allowed to load, reducing the risk of common browser-based attacks.

@@ -1,10 +1,10 @@
-
 import React, { useContext, useState } from 'react';
 import { AuthProvider, AuthContext } from './context/AuthContext';
 import GigList from './components/GigList';
 import TaxDashboard from './components/TaxDashboard';
 import BookingManagement from './components/BookingManagement';
 import ClientBookings from './components/ClientBookings';
+import AdminDisputes from './components/AdminDisputes';
 import './App.css';
 
 function Navigation() {
@@ -24,7 +24,10 @@ function Navigation() {
       ? '/api/auth/register'
       : '/api/auth/login';
 
-    const payload = { email, password, role };
+    // Only registration needs a role.
+    const payload = isSignUp
+      ? { email, password, role }
+      : { email, password };
 
     try {
       const response = await fetch(endpoint, {
@@ -36,11 +39,12 @@ function Navigation() {
       const data = await response.json();
 
       if (!response.ok) {
-        setErrorMsg(data.error || 'Authentication failed');
+        setErrorMsg(data.error || data.message || 'Authentication failed.');
         return;
       }
 
       if (isSignUp) {
+        // Log in automatically after successful registration.
         const loginRes = await fetch('/api/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -49,13 +53,16 @@ function Navigation() {
 
         const loginData = await loginRes.json();
 
-        if (loginRes.ok) {
-          login(loginData.user, loginData.token);
-        } else {
+        if (!loginRes.ok) {
           setErrorMsg(
-            loginData.error || 'Auto-login failed after registration.'
+            loginData.error ||
+            loginData.message ||
+            'Auto-login failed after registration.'
           );
+          return;
         }
+
+        login(loginData.user, loginData.token);
       } else {
         login(data.user, data.token);
       }
@@ -96,6 +103,17 @@ function Navigation() {
             required
           />
 
+          {isSignUp && (
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              aria-label="Account type"
+            >
+              <option value="client">Client</option>
+              <option value="freelancer">Freelancer</option>
+            </select>
+          )}
+
           <button type="submit">
             {isSignUp ? 'Sign Up' : 'Log In'}
           </button>
@@ -106,6 +124,8 @@ function Navigation() {
             onClick={() => {
               setIsSignUp(!isSignUp);
               setErrorMsg('');
+              setPassword('');
+              setRole('client');
             }}
             style={{
               marginLeft: '8px',
@@ -120,6 +140,7 @@ function Navigation() {
 
           {errorMsg && (
             <div
+              role="alert"
               style={{
                 color: 'red',
                 fontSize: '12px',
@@ -153,6 +174,8 @@ function AppContent() {
       {user?.role === 'client' && <ClientBookings />}
 
       {user?.role === 'freelancer' && <BookingManagement />}
+
+      {user?.role === 'admin' && <AdminDisputes />}
     </div>
   );
 }

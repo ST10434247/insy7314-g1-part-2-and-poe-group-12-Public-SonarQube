@@ -61,9 +61,11 @@ const createAdmin = async () => {
     console.error('Admin creation failed:', error.message);
     process.exitCode = 1;
   } finally {
-    // Close the database connection after the script finishes.
     const mongoose = require('mongoose');
-    await mongoose.disconnect();
+
+    if (mongoose.connection.readyState !== 0) {
+        await mongoose.disconnect();
+    }
   }
 };
 

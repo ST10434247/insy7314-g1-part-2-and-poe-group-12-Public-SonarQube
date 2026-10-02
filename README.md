@@ -1,416 +1,280 @@
-# HustleHub Part 1 - Secure Authentication API
+# HustleHub — Secure Freelance Marketplace
 
 ## Project Overview
 
-HustleHub is a RESTful web application designed to connect clients with freelancers.
+HustleHub is a MERN-based freelance marketplace that connects clients with freelancers. Clients can browse services, submit booking requests and complete simulated payments. Freelancers can publish gigs, manage bookings and view their income information. Administrators can review and resolve disputed bookings.
 
-This repository contains the Part 1 security implementation of the project. The focus of this stage is secure user authentication, password protection, JWT-based authentication, HTTPS communication, input validation, and controlled error handling.
+The project focuses on application functionality and security, including role-based access control, JWT authentication, input validation, sanitisation, security headers and rate limiting.
 
-The application uses an in-memory user store for Part 1.
+**Payment processing is simulated.** No real payment gateway is connected, and payment card details are not submitted to the backend.
 
----
+## Technology Stack
 
-## System Architecture
+| Layer            | Technology             |
+| ---------------- | ---------------------- |
+| Frontend         | React 18               |
+| Backend          | Node.js, Express 5     |
+| Database         | MongoDB with Mongoose  |
+| Authentication   | JSON Web Tokens        |
+| Password hashing | bcryptjs               |
+| Validation       | express-validator      |
+| Sanitisation     | express-mongo-sanitize |
+| Security headers | Helmet                 |
+| Logging          | Winston                |
+| Development      | Nodemon, concurrently  |
+| Transport        | HTTPS for the backend  |
 
-The overall HustleHub application follows the MERN architecture. For Part 1, the assessment focuses on the secure Node.js and Express backend.
+## Application Roles
 
-```text
-                         MERN Architecture
+| Role       | Main capabilities                                                                            |
+| ---------- | -------------------------------------------------------------------------------------------- |
+| Client     | Browse gigs, request bookings, manage bookings and use simulated payments                    |
+| Freelancer | Publish gigs, accept or reject bookings, manage booking progress and view income information |
+| Admin      | View eligible disputed bookings and resolve disputes                                         |
 
-┌─────────────────────────────────────────────────────────────┐
-│                         React Frontend                      │
-│                  Client-facing application                  │
-└──────────────────────────────┬──────────────────────────────┘
-                               │
-                            HTTPS
-                               │
-                               ▼
-┌─────────────────────────────────────────────────────────────┐
-│                    Node.js + Express API                    │
-│                                                             │
-│  ┌───────────────────────────────────────────────────────┐  │
-│  │                 Part 1 Security Layer                 │  │
-│  │                                                       │  │
-│  │  Helmet → JSON Limits → Validation → Authentication   │  │
-│  │                                                       │  │
-│  │        bcryptjs + JWT + Protected Routes              │  │
-│  └───────────────────────────┬───────────────────────────┘  │
-│                              │                              │
-│                    Part 1: In-Memory Store                  │
-└──────────────────────────────┼──────────────────────────────┘
-                               │
-                     Later Project Stage
-                               │
-                               ▼
-                    ┌─────────────────────┐
-                    │       MongoDB       │
-                    │   Persistent data   │
-                    └─────────────────────┘
-```
+Role-based visibility in the frontend improves the user interface. The backend is responsible for enforcing actual permissions.
 
-### Part 1 Scope
-
-The overall HustleHub system follows the MERN architecture, consisting of MongoDB, Express, React, and Node.js. For Part 1, the assessment focuses on the secure Node.js and Express backend.
-
-The React frontend and MongoDB persistence are part of the overall system architecture but are intentionally not included in this Part 1 submission. An in-memory user store is used to satisfy the Part 1 authentication requirements without introducing database functionality at this stage.
-
-### Authentication Flow
-
-1. A user submits registration details.
-2. The request is validated before reaching the registration logic.
-3. The password is hashed using bcrypt before being stored.
-4. A user can log in using the registered credentials.
-5. The supplied password is compared against the stored bcrypt hash.
-6. A successful login generates a JWT that expires after one hour.
-7. Protected routes require a valid Bearer token.
-
----
-
-## Security Implementation
-
-### HTTPS
-
-The server runs over HTTPS using a locally generated certificate and private key.
-
-The certificate and private key are stored locally and excluded from Git using `.gitignore`.
-
-Certificate paths are provided through environment variables:
-
-```env
-SSL_KEY_PATH=../certs/key.pem
-SSL_CERT_PATH=../certs/cert.pem
-```
-
-This keeps certificate files and private keys out of the source code and prevents them from being committed to the GitHub repository.
-
-### Password Hashing
-
-User passwords are never stored in plaintext.
-
-The application uses `bcryptjs` with a work factor of `12` to generate a one-way password hash before the user is stored.
-
-The original password is therefore never retained by the application.
-
-### JWT Authentication
-
-Successful login generates a JSON Web Token containing the authenticated user's ID and role.
-
-The token is signed using a secret stored in the environment configuration rather than being hardcoded in the source code.
-
-JWTs expire after one hour to limit the useful lifetime of a stolen token.
-
-### Input Validation
-
-`express-validator` is used to validate registration and login requests before the request reaches the route logic.
-
-Validation includes:
-
-- Valid email format
-- Email normalization
-- Password length between 8 and 72 characters
-- Valid user roles
-
-Public registration is restricted to the `client` and `freelancer` roles. Users cannot assign themselves the `admin` role during registration.
-
-### Error Handling
-
-The API uses controlled error responses for invalid routes, invalid input, authentication failures, and unexpected server errors.
-
-Unexpected server errors are logged on the server while the client receives a generic error message. This prevents internal implementation details such as stack traces and file paths from being exposed through API responses.
-
-### Request Size Limiting
-
-JSON request bodies are limited to 10 KB to reduce unnecessary resource consumption and help protect the API against oversized requests.
-
-### Security Headers
-
-Helmet is used to configure HTTP security headers, including a Content Security Policy.
-
----
-
-## Environment Configuration
-
-Create a `.env` file in the project root.
-
-The repository includes `.env.example` as a safe template.
-
-Example:
-
-```env
-PORT=3000
-JWT_SECRET=your-own-random-secret
-SSL_KEY_PATH=../certs/key.pem
-SSL_CERT_PATH=../certs/cert.pem
-```
 ## Project Structure
 
 ```text
 HustleHub/
-│
 ├── backend/
 │   ├── middleware/
 │   │   ├── auth.js
 │   │   └── validate.js
-│   │
+│   ├── models/
 │   ├── routes/
-│   │   └── auth.js
-│   │
-│   ├── package.json
-│   ├── package-lock.json
+│   │   ├── admin.js
+│   │   ├── auth.js
+│   │   ├── bookings.js
+│   │   ├── gigs.js
+│   │   └── transactions.js
+│   ├── scripts/
+│   │   └── createAdmin.js
 │   └── server.js
-│
-├── tests/
-│   ├── HustleHub-Part1-Security.postman_collection.json
-│   └── screenshots/
-│
+├── frontend/
+│   ├── public/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── context/
+│   │   ├── App.jsx
+│   │   └── App.css
+│   └── package.json
+├── docs/
+│   └── DEVELOPMENT_AND_TESTING.md
 ├── .env.example
 ├── .gitignore
+├── package.json
 └── README.md
 ```
 
----
+The structure above represents the main application areas. Individual files may differ depending on the current branch.
+
+## Requirements
+
+* Node.js and npm
+* MongoDB Atlas or a compatible MongoDB instance
+* OpenSSL for local HTTPS certificates
+* Git
+* A modern browser
+* Postman or an equivalent API client for manual API checks
 
 ## Installation
 
-### Requirements
+### 1. Clone the repository
 
-- Node.js
-- npm
-- Postman or the Postman VS Code extension
-- OpenSSL for local HTTPS certificate generation
-
-## Installation
-
-### Requirements
-- Node.js
-- npm
-- Postman or the Postman VS Code extension
-- OpenSSL for local HTTPS certificate generation
-
-### Clone the Repository
-Clone the project repository and navigate into the root directory:
 ```bash
 git clone <repository-url>
-cd <project-directory>
+cd <repository-directory>
 ```
 
-### Install Dependencies
-Navigate to the backend directory and install the required modules:
+### 2. Install backend dependencies
+
+From the project root:
+
 ```bash
-cd backend
 npm install
 ```
 
-### HTTPS Certificates
-The application expects the local HTTPS certificate and private key to be stored in a `certs` directory inside the `backend` folder. 
+### 3. Install frontend dependencies
 
-Create the directory and navigate into it:
 ```bash
-mkdir certs
-cd certs
-```
-
-Your structure should look like this:
-```text
-backend/certs/
-├── cert.pem
-└── key.pem
-```
-
-To generate the required certificate files inside the `certs` directory, run the following command:
-```bash
-openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 30 -nodes
-```
-
-After generating the certificates, navigate back up to the `backend` root:
-```bash
+cd frontend
+npm install
 cd ..
 ```
 
-### JWT Secret Generation
-To generate a secure, cryptographically strong secret key for your `JWT_SECRET` environment variable, run the following command in your terminal:
+## Environment Configuration
+
+Create a `.env` file in the location expected by the backend configuration. The current backend loads the root environment file.
+
+Use `.env.example` as the template, and configure the values for your environment.
+
+Typical configuration includes:
+
+```env
+MONGODB_URI=your_mongodb_connection_string
+JWT_SECRET=your_long_random_secret
+PORT=3000
+SSL_KEY_PATH=path_to_private_key
+SSL_CERT_PATH=path_to_certificate
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=replace_with_a_secure_password
+```
+
+The exact certificate paths must match the paths used by `backend/server.js`.
+
+Generate a strong JWT secret using:
+
 ```bash
 node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 ```
-Copy the output string and paste it as your `JWT_SECRET` value in your `.env` file.
 
-### Environment Configuration
-Create a `.env` file in the `backend` directory and provide the required configuration values.
+Do not commit `.env`, database credentials, JWT secrets, admin credentials, private keys or other secrets.
 
----
+### Local HTTPS Certificates
+
+The backend uses HTTPS. Generate a local certificate and private key using OpenSSL if they are not already available.
+
+Example:
+
+```bash
+mkdir backend/certs
+cd backend/certs
+openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 30 -nodes
+cd ../..
+```
+
+Ensure the paths in `.env` correspond to the generated files.
+
+Local self-signed certificates may trigger browser or API-client warnings. They are intended for development and should not be treated as production certificates.
 
 ## Running the Application
-From the `backend` directory:
+
+### Start the backend
+
+From the project root:
+
 ```bash
 npm start
 ```
 
-The server runs on:
-```text
-https://localhost:3000
-```
-*Note: A local or self-signed certificate may cause a certificate warning in Postman or a browser. This is expected during local HTTPS development.*
-
-
-## API Endpoints
-
-| Method | Endpoint | Access | Description |
-|--------|----------|--------|-------------|
-| POST | `/api/auth/register` | Public | Registers a new client or freelancer |
-| POST | `/api/auth/login` | Public | Authenticates a user and returns a JWT |
-| GET | `/api/auth/protected` | Protected | Requires a valid JWT |
-
-### Registration
-
-```http
-POST /api/auth/register
-```
-
-Example request:
-
-```json
-{
-  "email": "test@example.com",
-  "password": "TestPassword123!",
-  "role": "client"
-}
-```
-
-### Login
-
-```http
-POST /api/auth/login
-```
-
-Example request:
-
-```json
-{
-  "email": "test@example.com",
-  "password": "TestPassword123!"
-}
-```
-
-A successful login returns a JWT.
-
-### Protected Route
-
-```http
-GET /api/auth/protected
-```
-
-The JWT must be supplied using the HTTP Authorization header:
-
-```text
-Authorization: Bearer <JWT>
-```
-
----
-
-## Postman Testing
-
-A Postman collection is included in:
-
-```text
-tests/HustleHub-Part1-Security.postman_collection.json
-```
-
-The collection contains tests for:
-
-1. Valid registration
-2. Missing password registration
-3. Invalid role registration
-4. Short password registration
-5. Duplicate email registration
-6. Invalid email registration
-7. Valid login
-8. Invalid login credentials
-9. Protected route with a valid JWT
-10. Protected route without a JWT
-11. Protected route with an invalid JWT
-
-### Running the Tests
-
-Start the backend server before sending requests:
-
-```bash
-cd backend
-npm start
-```
-
-The API is available at:
+The backend is configured to use:
 
 ```text
 https://localhost:3000
 ```
 
-Import the Postman collection and execute the requests individually.
+For development with automatic backend restarts:
 
-For the protected route test using a valid JWT:
-
-1. Run **Login - Valid**.
-2. Copy the JWT returned in the response.
-3. Open **Protected - Valid Token**.
-4. Add the following HTTP header:
-
-```text
-Authorization: Bearer <JWT>
+```bash
+npm run dev
 ```
 
-5. Replace `<JWT>` with the token returned by the login request.
-6. Send the request and verify that the protected resource returns a successful response.
+### Start the frontend
 
-The **Protected - Invalid Token** request deliberately uses an invalid token to demonstrate that the API rejects tokens that cannot be successfully verified.
+Open a second terminal:
 
-The **Protected - No Token** request does not include an Authorization header and demonstrates that protected resources cannot be accessed without authentication.
-
-Screenshots of the test responses are stored in:
-
-```text
-tests/screenshots/
+```bash
+cd frontend
+npm start
 ```
 
-These tests demonstrate both successful functionality and rejection of invalid, malformed, and unauthorised requests.
+The frontend is configured to use port `3001` and proxies API requests to the backend at `https://localhost:3000`.
 
-For local HTTPS testing, Postman may require SSL certificate verification to be disabled when using the self-signed development certificate.
+### Start both applications
 
----
+The root package includes:
 
-## Part 1 Scope
+```bash
+npm run dev:full
+```
 
-This repository intentionally contains only the functionality required for the Part 1 security submission.
+This starts the backend development process and the frontend using the configured scripts.
 
-User accounts are stored in memory and are therefore reset when the server is restarted.
+## Main Features
 
-Database persistence and additional HustleHub functionality are implemented in later stages of the project and are not included in this submission.
+### Authentication
 
----
+* Client and freelancer registration
+* Login using email and password
+* Password hashing using bcrypt
+* JWT-based authentication
+* Role information included in authenticated sessions
+* Restricted public registration roles
+* Admin account provisioning through a backend script
 
-## Security and Source Control
+### Gig Marketplace
 
-The repository is configured to prevent sensitive configuration and cryptographic material from being committed to source control.
+* Public browsing of active gigs
+* Freelancer gig publishing
+* Gig ownership restrictions for editing and deletion
+* Server-side validation of gig information
 
-The following types of files are excluded using `.gitignore`:
+### Booking Management
 
-- Environment files
-- Private keys
-- HTTPS certificates
-- Certificate containers
-- Node.js dependencies
+* Clients submit booking requests with project requirements
+* Freelancers accept or reject pending requests
+* Clients can cancel eligible bookings
+* Freelancers can mark accepted work as awaiting confirmation
+* Clients can confirm completion or dispute work
+* Freelancers can request administrative review of disputed bookings
 
-The JWT signing secret and HTTPS private key are supplied through local environment configuration and are not included in the repository.
+### Simulated Transactions
 
+* Transactions are associated with bookings
+* Transaction amounts and participants are derived from booking data
+* Simulated payment status updates
+* Freelancer income information is based on paid transactions
 
----
+The payment flow is for demonstration purposes. It does not provide verified settlement or real financial processing.
 
-## References
+### Dispute Management
 
-- Auth0, 2020. Navigating RS256 and JWKS [code]. Available at: <https://auth0.com/blog/navigating-rs256-and-jwks/> [Accessed 17 August 2026].
-- Auth0, 2026a. Express.js Code Sample: API Role-Based Access Control [code]. Available at: <https://developer.auth0.com/resources/code-samples/api/express/basic-role-based-access-control> [Accessed 17 August 2026].
-- Auth0, 2026b. Node.js API Authorization By Example [code]. Available at: <https://developer.auth0.com/resources/guides/api/express/basic-authorization> [Accessed 18 August 2026].
-- bcryptjs, 2026. bcryptjs [code]. Available at: <https://www.npmjs.com/package/bcryptjs> [Accessed 18 August 2026].
-- Express.js, 2026. Express routing [code]. Available at: <https://expressjs.com/en/guide/routing.html> [Accessed 3 September 2026].
-- express-validator, 2026. express-validator documentation [code]. Available at: <https://express-validator.github.io/docs/> [Accessed 18 August 2026].
-- The Independent Institute of Education (IIE), 2026. INFORMATION SYSTEMS 3D INSY7314 [APPLICATION DEVELOPMENT SECURITY MODULE MANUAL]
-  The Independent Institute of Education. Unpublished.
+* Administrators can view disputed bookings that have a review request
+* Administrators can resolve eligible disputes
+* Resolution updates the booking status and clears review-request metadata
 
+## Security Controls
+
+The backend includes security mechanisms such as:
+
+* JWT verification for protected routes
+* Role-based authorization
+* Password hashing
+* Request validation
+* MongoDB query sanitisation
+* Helmet security headers and Content Security Policy
+* JSON request-size limits
+* HTTPS transport
+* Controlled error responses
+
+Rate limiting is part of the security assessment scope. Confirm its middleware configuration and route coverage in the current backend before describing its exact limits or behavior.
+
+## Testing
+
+The project can be reviewed through:
+
+* Manual frontend workflow checks
+* API requests using Postman
+* Role and authorization checks
+* Input validation checks
+* Security-header inspection
+* Rate-limit behavior checks
+* Frontend production build
+
+See [Development and Testing Guide](docs/DEVELOPMENT_AND_TESTING.md) for the workflow and handover checklist.
+
+## Known Limitations
+
+* Payments are simulated and are not verified by an external payment provider.
+* The application uses local development HTTPS certificates.
+* JWTs are stored by the frontend in browser local storage.
+* A frontend role check is not a replacement for backend authorization.
+* Production deployment configuration, certificate management and operational security require separate review.
+
+## Development Notes
+
+The root package manages the backend dependencies. The frontend has its own package configuration and dependencies under `frontend`.
+
+The frontend package is named `gig-app-frontend`, despite the overall application being called HustleHub.

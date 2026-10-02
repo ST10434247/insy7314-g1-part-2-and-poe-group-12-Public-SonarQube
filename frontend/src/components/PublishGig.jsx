@@ -25,10 +25,10 @@ export default function PublishGig({ onGigPublished }) {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ 
-          title, 
-          description, 
-          price: Number(price) 
+        body: JSON.stringify({
+          title,
+          description,
+          price: Number(price)
         })
       });
 
@@ -36,9 +36,11 @@ export default function PublishGig({ onGigPublished }) {
 
       if (res.ok) {
         alert('Gig published successfully!');
+
         setTitle('');
         setDescription('');
         setPrice('');
+
         if (onGigPublished) {
           onGigPublished(data);
         }
@@ -54,25 +56,31 @@ export default function PublishGig({ onGigPublished }) {
   return (
     <div className="publish-section">
       <h3>Create a New Gig Listing</h3>
+
       <form onSubmit={handleSubmit} className="publish-form">
-        <input 
-          type="text" 
-          placeholder="Gig Title" 
-          value={title} 
-          onChange={(e) => setTitle(e.target.value)} 
+        <input
+          type="text"
+          placeholder="Gig Title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
         />
-        <textarea 
-          placeholder="Gig Description" 
-          value={description} 
-          onChange={(e) => setDescription(e.target.value)} 
+
+        <textarea
+          placeholder="Gig Description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
         />
-        <input 
-          type="number" 
-          placeholder="Price ($)" 
-          value={price} 
-          onChange={(e) => setPrice(e.target.value)} 
+
+        <input
+          type="number"
+          placeholder="Price (R)"
+          value={price}
+          onChange={(e) => setPrice(e.target.value)}
         />
-        <button type="submit">Publish Gig</button>
+
+        <button type="submit">
+          Publish Gig
+        </button>
       </form>
     </div>
   );
