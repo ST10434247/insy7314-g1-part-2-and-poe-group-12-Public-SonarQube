@@ -10,6 +10,8 @@ require('dotenv').config({
 // Import the gig routes for creating, viewing, updating, and deleting gigs.
 const gigRoutes = require('./routes/gigs');
 const connectDB = require('./config/db');
+const mongoSanitize = require('@exortek/express-mongo-sanitize');
+const { rateLimit } = require('express-rate-limit');
 const fs = require('fs');
 const https = require('https');
 const express = require('express');
@@ -44,6 +46,35 @@ app.use(
 // Limits the size of incoming JSON requests to reduce unnecessary resource
 // consumption and help protect the API against oversized request attacks.
 app.use(express.json({ limit: '10kb' }));
+
+// Sanitise incoming request data to prevent MongoDB operator injection.
+app.use(mongoSanitize());
+
+// Apply a general rate limit to API requests.
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  limit: 100, // Maximum requests per IP in the window
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  message: {
+    error: 'Too many requests. Please try again later.'
+  }
+});
+
+// Apply a stricter limit to authentication endpoints.
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  message: {
+    error: 'Too many authentication attempts. Please try again later.'
+  }
+});
+
+// Apply limits before the routes they protect.
+app.use('/api', apiLimiter);
+app.use('/api/auth', authLimiter);
 
 // Authentication routes handle registration, login and authentication-related requests.
 app.use('/api/auth', authRoutes);

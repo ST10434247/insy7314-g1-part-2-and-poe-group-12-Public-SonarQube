@@ -1,94 +1,16 @@
-# HustleHub — Secure Freelance Marketplace
+# HustleHub
 
-## Project Overview
-
-HustleHub is a MERN-based freelance marketplace that connects clients with freelancers. Clients can browse services, submit booking requests and complete simulated payments. Freelancers can publish gigs, manage bookings and view their income information. Administrators can review and resolve disputed bookings.
-
-The project focuses on application functionality and security, including role-based access control, JWT authentication, input validation, sanitisation, security headers and rate limiting.
-
-**Payment processing is simulated.** No real payment gateway is connected, and payment card details are not submitted to the backend.
-
-## Technology Stack
-
-| Layer            | Technology             |
-| ---------------- | ---------------------- |
-| Frontend         | React 18               |
-| Backend          | Node.js, Express 5     |
-| Database         | MongoDB with Mongoose  |
-| Authentication   | JSON Web Tokens        |
-| Password hashing | bcryptjs               |
-| Validation       | express-validator      |
-| Sanitisation     | express-mongo-sanitize |
-| Security headers | Helmet                 |
-| Logging          | Winston                |
-| Development      | Nodemon, concurrently  |
-| Transport        | HTTPS for the backend  |
-
-## Application Roles
-
-| Role       | Main capabilities                                                                            |
-| ---------- | -------------------------------------------------------------------------------------------- |
-| Client     | Browse gigs, request bookings, manage bookings and use simulated payments                    |
-| Freelancer | Publish gigs, accept or reject bookings, manage booking progress and view income information |
-| Admin      | View eligible disputed bookings and resolve disputes                                         |
-
-Role-based visibility in the frontend improves the user interface. The backend is responsible for enforcing actual permissions.
-
-## Project Structure
-
-```text
-HustleHub/
-├── backend/
-│   ├── middleware/
-│   │   ├── auth.js
-│   │   └── validate.js
-│   ├── models/
-│   ├── routes/
-│   │   ├── admin.js
-│   │   ├── auth.js
-│   │   ├── bookings.js
-│   │   ├── gigs.js
-│   │   └── transactions.js
-│   ├── scripts/
-│   │   └── createAdmin.js
-│   └── server.js
-├── frontend/
-│   ├── public/
-│   ├── src/
-│   │   ├── components/
-│   │   ├── context/
-│   │   ├── App.jsx
-│   │   └── App.css
-│   └── package.json
-├── docs/
-│   └── DEVELOPMENT_AND_TESTING.md
-├── .env.example
-├── .gitignore
-├── package.json
-└── README.md
-```
-
-The structure above represents the main application areas. Individual files may differ depending on the current branch.
+HustleHub is a gig marketplace built with a React frontend and an Express, Node.js and MongoDB backend. Clients can browse gigs, book freelancers and make simulated payments. Freelancers can publish gigs and manage bookings. Administrators can review and resolve escalated disputes.
 
 ## Requirements
 
 * Node.js and npm
-* MongoDB Atlas or a compatible MongoDB instance
-* OpenSSL for local HTTPS certificates
-* Git
-* A modern browser
-* Postman or an equivalent API client for manual API checks
+* MongoDB Atlas account or a reachable MongoDB instance
+* OpenSSL or another method of generating HTTPS certificates
 
-## Installation
+## Installation and setup
 
-### 1. Clone the repository
-
-```bash
-git clone <repository-url>
-cd <repository-directory>
-```
-
-### 2. Install backend dependencies
+### 1. Install dependencies
 
 From the project root:
 
@@ -96,7 +18,7 @@ From the project root:
 npm install
 ```
 
-### 3. Install frontend dependencies
+Install the frontend dependencies:
 
 ```bash
 cd frontend
@@ -104,177 +26,108 @@ npm install
 cd ..
 ```
 
-## Environment Configuration
+### 2. Configure environment variables
 
-Create a `.env` file in the location expected by the backend configuration. The current backend loads the root environment file.
-
-Use `.env.example` as the template, and configure the values for your environment.
-
-Typical configuration includes:
+Create a `.env` file in the project root. Do not commit this file or share its secrets.
 
 ```env
 MONGODB_URI=your_mongodb_connection_string
 JWT_SECRET=your_long_random_secret
-PORT=3000
-SSL_KEY_PATH=path_to_private_key
-SSL_CERT_PATH=path_to_certificate
 ADMIN_EMAIL=admin@example.com
-ADMIN_PASSWORD=replace_with_a_secure_password
+ADMIN_PASSWORD=your_admin_password
 ```
 
-The exact certificate paths must match the paths used by `backend/server.js`.
+Add the HTTPS certificate path variables expected by `backend/server.js`. The variable names and paths must match the actual server configuration.
 
-Generate a strong JWT secret using:
+Use a strong, unique JWT secret. Keep all credentials out of source control.
 
-```bash
-node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
-```
+### 3. Generate HTTPS certificates
 
-Do not commit `.env`, database credentials, JWT secrets, admin credentials, private keys or other secrets.
+The backend uses HTTPS. For local development, a self-signed certificate can be generated with OpenSSL.
 
-### Local HTTPS Certificates
-
-The backend uses HTTPS. Generate a local certificate and private key using OpenSSL if they are not already available.
-
-Example:
+For example, from the project root:
 
 ```bash
 mkdir backend/certs
-cd backend/certs
-openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 30 -nodes
-cd ../..
+openssl req -x509 -newkey rsa:2048 -nodes \
+  -keyout backend/certs/server.key \
+  -out backend/certs/server.crt \
+  -days 365
 ```
 
-Ensure the paths in `.env` correspond to the generated files.
+Use the generated key and certificate paths in the backend configuration or environment variables. A browser may warn that a self-signed certificate is not trusted. This is expected for local development.
 
-Local self-signed certificates may trigger browser or API-client warnings. They are intended for development and should not be treated as production certificates.
+### 4. Start the application
 
-## Running the Application
-
-### Start the backend
-
-From the project root:
-
-```bash
-npm start
-```
-
-The backend is configured to use:
-
-```text
-https://localhost:3000
-```
-
-For development with automatic backend restarts:
+Start the backend:
 
 ```bash
 npm run dev
 ```
 
-### Start the frontend
-
-Open a second terminal:
+In a separate terminal, start the frontend:
 
 ```bash
 cd frontend
 npm start
 ```
 
-The frontend is configured to use port `3001` and proxies API requests to the backend at `https://localhost:3000`.
+The current configuration uses:
 
-### Start both applications
+* Frontend: `https://localhost:3001` or the local URL displayed by the development server.
+* Backend: `https://localhost:3000`
+* Frontend API proxy: `https://localhost:3000`
 
-The root package includes:
+The frontend proxy and HTTPS settings must agree with the backend configuration.
+
+### 5. Create an administrator
+
+Configure `ADMIN_EMAIL` and `ADMIN_PASSWORD` in `.env`, then run the administrator provisioning script if required:
 
 ```bash
-npm run dev:full
+node backend/scripts/createAdmin.js
 ```
 
-This starts the backend development process and the frontend using the configured scripts.
+Do not use public registration to create administrator accounts.
 
-## Main Features
+## Application workflow
 
-### Authentication
+1. Users register as clients or freelancers and log in.
+2. Freelancers publish gigs.
+3. Clients browse available gigs and submit bookings.
+4. Freelancers accept or reject pending bookings.
+5. Accepted bookings can proceed to simulated payment and completion.
+6. Disputes can be escalated for administrator review.
+7. Administrators can review and resolve eligible disputes.
 
-* Client and freelancer registration
-* Login using email and password
-* Password hashing using bcrypt
-* JWT-based authentication
-* Role information included in authenticated sessions
-* Restricted public registration roles
-* Admin account provisioning through a backend script
+Payments are simulated. The application does not process real card payments through a payment provider.
 
-### Gig Marketplace
+## Security configuration
 
-* Public browsing of active gigs
-* Freelancer gig publishing
-* Gig ownership restrictions for editing and deletion
-* Server-side validation of gig information
+| Security feature          | Configuration                                                                                                              |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| JWT authentication        | Bearer tokens verified by authentication middleware. Tokens expire after one hour.                                         |
+| Role-based access control | Role middleware restricts protected routes. Route-level ownership and participant checks limit access to relevant records. |
+| Password security         | Passwords are hashed using bcrypt with 12 salt rounds.                                                                     |
+| Input validation          | `express-validator` validates request data and identifiers on relevant routes.                                             |
+| Input sanitisation        | MongoDB query sanitisation middleware is applied to incoming requests.                                                     |
+| Rate limiting             | General API limit: 100 requests per 15 minutes. Authentication limit: 10 requests per 15 minutes.                          |
+| Security headers          | Helmet is configured with a custom Content Security Policy.                                                                |
+| Request size              | JSON request bodies are limited to 10 KB.                                                                                  |
+| Transport security        | The backend is configured to use HTTPS.                                                                                    |
 
-### Booking Management
+The authentication endpoints receive both the general API limiter and the stricter authentication limiter.
 
-* Clients submit booking requests with project requirements
-* Freelancers accept or reject pending requests
-* Clients can cancel eligible bookings
-* Freelancers can mark accepted work as awaiting confirmation
-* Clients can confirm completion or dispute work
-* Freelancers can request administrative review of disputed bookings
-
-### Simulated Transactions
-
-* Transactions are associated with bookings
-* Transaction amounts and participants are derived from booking data
-* Simulated payment status updates
-* Freelancer income information is based on paid transactions
-
-The payment flow is for demonstration purposes. It does not provide verified settlement or real financial processing.
-
-### Dispute Management
-
-* Administrators can view disputed bookings that have a review request
-* Administrators can resolve eligible disputes
-* Resolution updates the booking status and clears review-request metadata
-
-## Security Controls
-
-The backend includes security mechanisms such as:
-
-* JWT verification for protected routes
-* Role-based authorization
-* Password hashing
-* Request validation
-* MongoDB query sanitisation
-* Helmet security headers and Content Security Policy
-* JSON request-size limits
-* HTTPS transport
-* Controlled error responses
-
-Rate limiting is part of the security assessment scope. Confirm its middleware configuration and route coverage in the current backend before describing its exact limits or behavior.
+The Content Security Policy currently allows same-origin resources, inline scripts and styles, data images, and connections to the local backend. Review the policy if deployment URLs or frontend requirements change.
 
 ## Testing
 
-The project can be reviewed through:
+Backend API tests are run using Postman and Newman. Frontend tests use the configured React test setup.
 
-* Manual frontend workflow checks
-* API requests using Postman
-* Role and authorization checks
-* Input validation checks
-* Security-header inspection
-* Rate-limit behavior checks
-* Frontend production build
+See the team testing notes for the section-specific testing checklist.
 
-See [Development and Testing Guide](docs/DEVELOPMENT_AND_TESTING.md) for the workflow and handover checklist.
+## Important
 
-## Known Limitations
-
-* Payments are simulated and are not verified by an external payment provider.
-* The application uses local development HTTPS certificates.
-* JWTs are stored by the frontend in browser local storage.
-* A frontend role check is not a replacement for backend authorization.
-* Production deployment configuration, certificate management and operational security require separate review.
-
-## Development Notes
-
-The root package manages the backend dependencies. The frontend has its own package configuration and dependencies under `frontend`.
-
-The frontend package is named `gig-app-frontend`, despite the overall application being called HustleHub.
+* Never commit `.env`, private keys, certificates containing secrets, or real credentials.
+* Use local development certificates only for local development.
+* Confirm the environment variable names and certificate paths against `backend/server.js` before setting up a new machine.

@@ -20,6 +20,8 @@ router.post(
     body('email')
       .isEmail()
       .withMessage('Please provide a valid email address.')
+      .isLength({ max: 254 })
+      .withMessage('Email address is too long.')
       .normalizeEmail(),
     body('password')
       .isString()
