@@ -5,79 +5,72 @@ const jwt = require('jsonwebtoken');
 const { body } = require('express-validator');
 const handleValidationErrors = require('../middleware/validate');
 const { authenticateToken } = require('../middleware/auth');
+const User = require('../models/User');
 
 // USER REGISTRATION AND LOGIN
 // VALIDATES USER'S DETAILS, BCRYPT FOR HASH PASSWORD THEN JWT SESSION TOKEN IF LOGIN SUCCESSFUL
 // JWT MAKES SURE THAT ONLY AUTHENTICATED USERS CAN USE THIS ROUTE
 
-// Stores registered users in memory for Part 1.
-// Persistent database storage is introduced in a later stage of the project,
-// so keeping users in memory allows the authentication requirements to be
-// demonstrated without introducing unnecessary database dependencies.
-const users = [];
-
 // Registration validates the supplied credentials, prevents duplicate accounts,
 // hashes the password before storage, and returns only non-sensitive user information.
+// Register a new user and store the password as a bcrypt hash.
 router.post(
   '/register',
   [
     body('email')
       .isEmail()
       .withMessage('Please provide a valid email address.')
+      .isLength({ max: 254 })
+      .withMessage('Email address is too long.')
       .normalizeEmail(),
-
     body('password')
+      .isString()
+      .withMessage('Password must be a string.')
+      .bail()
       .isLength({ min: 8, max: 72 })
-      .withMessage('Password must be between 8 and 72 characters long.')
-      .not()
-      .matches(/\s/)
+      .withMessage('Password must be between 8 and 72 characters.')
+      .custom((value) => !/\s/.test(value))
       .withMessage('Password must not contain whitespace.'),
-
     body('role')
       .optional()
-      .isIn(['freelancer', 'client'])
-      .withMessage('Role must be either "client" or "freelancer".')
+      .isIn(['client', 'freelancer'])
+      .withMessage('Role must be client or freelancer.'),
   ],
   handleValidationErrors,
-  async (req, res, next) => {
+  async (req, res) => {
     try {
-      const { email, password, role } = req.body;
+      const { email, password, role = 'client' } = req.body;
 
-      const existingUser = users.find(u => u.email === email);
-      if (existingUser) {
-        return res.status(400).json({
-          error: 'User with this email already exists.'
-        });
-      }
-      // PASSWORD HASHING
-      // (bcryptjs, 2026)
-
-      // Passwords are never stored in plaintext. bcrypt creates a one-way password hash
-      // using a work factor of 12, making password cracking significantly more expensive
-      // if the stored user data were ever exposed.
-
-      
+      // Hash the password before saving it to the database.
       const hashedPassword = await bcrypt.hash(password, 12);
 
-      const newUser = {
-        id: users.length + 1,
+      const user = await User.create({
         email,
         password: hashedPassword,
-        role: role || 'client'
-      };
+        role,
+      });
 
-      users.push(newUser);
-
-      res.status(201).json({
+      return res.status(201).json({
         message: 'User registered successfully!',
         user: {
-          id: newUser.id,
-          email: newUser.email,
-          role: newUser.role
-        }
+          id: user._id.toString(),
+          email: user.email,
+          role: user.role,
+        },
       });
-    } catch (err) {
-      next(err);
+    } catch (error) {
+      // A unique email index prevents duplicate accounts.
+      if (error.code === 11000) {
+        return res.status(400).json({
+          error: 'User with this email already exists.',
+        });
+      }
+
+      console.error('Registration failed:', error.message);
+
+      return res.status(500).json({
+        error: 'Unable to register user.',
+      });
     }
   }
 );
@@ -88,6 +81,7 @@ router.post(
 // INPUT VALIDATION
 // (express-validator, 2026)
 
+// Authenticate against the stored user record and issue a JWT.
 router.post(
   '/login',
   [
@@ -95,47 +89,60 @@ router.post(
       .isEmail()
       .withMessage('Please provide a valid email address.')
       .normalizeEmail(),
-
     body('password')
       .isString()
+      .withMessage('Password must be a string.')
+      .bail()
       .isLength({ min: 8, max: 72 })
-      .withMessage('Password must be between 8 and 72 characters long.')
+      .withMessage('Password must be between 8 and 72 characters.'),
   ],
   handleValidationErrors,
-  async (req, res, next) => {
+  async (req, res) => {
     try {
       const { email, password } = req.body;
 
-      const user = users.find(u => u.email === email);
+      // Passwords are excluded from normal queries, so explicitly include it.
+      const user = await User.findOne({ email }).select('+password');
 
-      // Compare the supplied plaintext password against the stored bcrypt hash.
-      // bcrypt performs the comparison without requiring the original password to be stored.
+      // Use the same response for unknown emails and incorrect passwords.
       if (!user || !(await bcrypt.compare(password, user.password))) {
         return res.status(401).json({
-          error: 'Invalid email or password.'
+          error: 'Invalid email or password.',
         });
       }
 
-      // JWT signing depends on a secret stored outside the source code.
-      // The application must not fall back to a hardcoded secret if configuration is missing.
       if (!process.env.JWT_SECRET) {
-        throw new Error('JWT_SECRET is not configured.');
+        console.error('JWT_SECRET is not configured.');
+
+        return res.status(500).json({
+          error: 'Authentication is temporarily unavailable.',
+        });
       }
 
-      // The token contains only the information needed to identify the authenticated user.
-      // It expires after one hour so a stolen token has a limited useful lifetime.
       const token = jwt.sign(
-        { id: user.id, role: user.role },
+        {
+          id: user._id.toString(),
+          role: user.role,
+        },
         process.env.JWT_SECRET,
         { expiresIn: '1h' }
       );
 
-      res.status(200).json({
+      return res.status(200).json({
         message: 'Login successful!',
-        token
+        token,
+        user: {
+          id: user._id.toString(),
+          email: user.email,
+          role: user.role,
+        },
       });
-    } catch (err) {
-      next(err);
+    } catch (error) {
+      console.error('Login failed:', error.message);
+
+      return res.status(500).json({
+        error: 'Unable to log in.',
+      });
     }
   }
 );

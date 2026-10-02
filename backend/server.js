@@ -1,10 +1,4 @@
 const path = require('path');
-const fs = require('fs');
-const https = require('https');
-const express = require('express');
-const helmet = require('helmet');
-const authRoutes = require('./routes/auth');
-const app = express();
 
 // Loads environment variables from the project root so configuration remains
 // separate from the backend source code and is available regardless of the
@@ -12,6 +6,25 @@ const app = express();
 require('dotenv').config({
   path: path.resolve(__dirname, '../.env')
 });
+
+// Import the gig routes for creating, viewing, updating, and deleting gigs.
+const gigRoutes = require('./routes/gigs');
+const connectDB = require('./config/db');
+const mongoSanitize = require('@exortek/express-mongo-sanitize');
+const { rateLimit } = require('express-rate-limit');
+const fs = require('fs');
+const https = require('https');
+const express = require('express');
+const helmet = require('helmet');
+const authRoutes = require('./routes/auth');
+const bookingRoutes = require('./routes/bookings');
+const transactionRoutes = require('./routes/transactions');
+const adminRoutes = require('./routes/admin');
+const app = express();
+
+// Use Google DNS to resolve MongoDB Atlas SRV records.
+const dns = require('node:dns');
+dns.setServers(['8.8.8.8']);
 
 // Security middleware adds HTTP security headers and restricts which resources
 // the application is allowed to load, reducing the risk of common browser-based attacks.
@@ -34,20 +47,60 @@ app.use(
 // consumption and help protect the API against oversized request attacks.
 app.use(express.json({ limit: '10kb' }));
 
-// Authentication routes handle user registration, login and access to protected resources.
+// Sanitise incoming request data to prevent MongoDB operator injection.
+app.use(mongoSanitize());
+
+// Apply a general rate limit to API requests.
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  limit: 100, // Maximum requests per IP in the window
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  message: {
+    error: 'Too many requests. Please try again later.'
+  }
+});
+
+// Apply a stricter limit to authentication endpoints.
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  message: {
+    error: 'Too many authentication attempts. Please try again later.'
+  }
+});
+
+// Apply limits before the routes they protect.
+app.use('/api', apiLimiter);
+app.use('/api/auth', authLimiter);
+
+// Authentication routes handle registration, login and authentication-related requests.
 app.use('/api/auth', authRoutes);
 
-// Returns a controlled response when a client requests a route that does not exist.
-// This prevents unnecessary framework or server information from being returned to the client.
+// Mount gig endpoints for creating, browsing, updating and deleting gigs.
+app.use('/api/gigs', gigRoutes);
+
+// Mount booking endpoints before the 404 handler so Express can reach them.
+app.use('/api/bookings', bookingRoutes);
+
+// Admin endpoints for reviewing and resolving disputed bookings.
+app.use('/api/admin', adminRoutes);
+
+// Mount transaction endpoints for simulated payments and income tracking.
+app.use('/api/transactions', transactionRoutes);
+
+// Return a controlled response when no route matches the request.
+// This must come after all application routes.
 app.use((req, res) => {
   res.status(404).json({
     error: 'Route not found'
   });
 });
 
-// Centralised error handling ensures unexpected errors are logged on the server
-// but only a generic message is returned to the client, preventing internal
-// details such as stack traces or file paths from being exposed.
+// Handle unexpected errors after all routes and other middleware.
+// Internal details are logged on the server, not returned to clients.
 app.use((err, req, res, next) => {
   console.error(err);
 
@@ -56,22 +109,30 @@ app.use((err, req, res, next) => {
   });
 });
 
-// HTTPS configuration loads the certificate and private key from environment-defined
-// paths. The paths are resolved relative to the backend directory so the application
-// behaves consistently regardless of which directory the server is started from.
-const sslOptions = {
-  key: fs.readFileSync(
-    path.resolve(__dirname, process.env.SSL_KEY_PATH || '../certs/key.pem')
-  ),
-  cert: fs.readFileSync(
-    path.resolve(__dirname, process.env.SSL_CERT_PATH || '../certs/cert.pem')
-  )
-};
-
 const PORT = process.env.PORT || 3000;
 
-// Starts the application over HTTPS so authentication credentials and JWTs are
-// encrypted while being transmitted between the client and the server.
-https.createServer(sslOptions, app).listen(PORT, () => {
-  console.log(`HTTPS Server running on port ${PORT}`);
-});
+// Connect to the database before accepting incoming requests.
+const startServer = async () => {
+  try {
+    await connectDB();
+
+    // HTTPS configuration loads the certificate and private key from environment-defined
+    // paths. These files must exist before the server can start.
+    const sslOptions = {
+      key: fs.readFileSync(
+        path.resolve(__dirname, process.env.SSL_KEY_PATH || '../certs/key.pem')
+      ),
+      cert: fs.readFileSync(
+        path.resolve(__dirname, process.env.SSL_CERT_PATH || '../certs/cert.pem')
+      )
+    };
+    https.createServer(sslOptions, app).listen(PORT, () => {
+      console.log(`HTTPS Server running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error('Server startup failed:', error.message);
+    process.exit(1);
+  }
+};
+
+startServer();

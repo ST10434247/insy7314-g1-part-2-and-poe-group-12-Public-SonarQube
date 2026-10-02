@@ -1,89 +1,156 @@
-import React, { useState, useContext } from 'react';
+
+import React, { useContext, useState } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import CardInput from './CardInput';
 
-export default function PaymentPage({ gigId, gigTitle, price }) {
-  const { token, user } = useContext(AuthContext);
-  const [validCardNumber, setValidCardNumber] = useState(null);
+export default function PaymentPage({ bookingId, gigTitle, price, onPaymentComplete }) {
+  const { token } = useContext(AuthContext);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
-
-  const handleCheckout = async (e) => {
-    e.preventDefault();
-    if (!validCardNumber) {
-      setMessage({ type: 'error', text: 'Please provide a valid card number.' });
-      return;
-    }
-
+  const [validCardNumber, setValidCardNumber] = useState(null);
+  // Create a transaction and simulate its payment.
+  const handleCheckout = async () => {
     if (!token) {
-      setMessage({ type: 'error', text: 'You must be logged in as a client to book.' });
+      setMessage({
+        type: 'error',
+        text: 'You must be logged in as a client.'
+      });
       return;
     }
 
+    if (!bookingId) {
+      setMessage({
+        type: 'error',
+        text: 'A booking ID is required.'
+      });
+      return;
+    }
+
+    if (!validCardNumber) {
+      setMessage({
+        type: 'error',
+        text: 'Please enter a valid Visa or Mastercard number.'
+      });
+      return;
+    }
     setLoading(true);
     setMessage(null);
 
     try {
-      const response = await fetch('/api/bookings', {
+      // Create a pending transaction for the accepted booking.
+      const createResponse = await fetch('/api/transactions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({
-          gigId: gigId,
-          cardNumber: validCardNumber
-        })
+        body: JSON.stringify({ bookingId })
       });
 
-      const data = await response.json();
+      const createData = await createResponse.json();
 
-      if (response.ok) {
-        setMessage({ type: 'success', text: `Booking successful! Confirmation ID: ${data.booking._id}` });
-      } else {
-        setMessage({ type: 'error', text: data.error || 'Payment failed.' });
+      if (!createResponse.ok) {
+        throw new Error(createData.error || 'Unable to create transaction.');
       }
-    } catch (err) {
-      setMessage({ type: 'error', text: 'Network error processing payment.' });
+
+      const transactionId = createData.transaction._id;
+
+      // Simulate successful payment through the transaction status endpoint.
+      const paymentResponse = await fetch(
+        `/api/transactions/${transactionId}/status`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ status: 'paid' })
+        }
+      );
+
+      const paymentData = await paymentResponse.json();
+
+      if (!paymentResponse.ok) {
+        throw new Error(
+          paymentData.error || 'Transaction created, but payment confirmation failed.'
+        );
+      }
+
+      setMessage({
+        type: 'success',
+        text: 'Simulated payment successful.'
+      });
+
+      if (onPaymentComplete) {
+        onPaymentComplete(paymentData.transaction);
+      }
+    } catch (error) {
+      setMessage({
+        type: 'error',
+        text: error.message || 'Unable to process payment.'
+      });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: '20px auto', padding: '20px', border: '1px solid #ccc', borderRadius: '8px' }}>
+    <div
+      style={{
+        maxWidth: '400px',
+        margin: '20px auto',
+        padding: '20px',
+        border: '1px solid #ccc',
+        borderRadius: '8px'
+      }}
+    >
       <h2>Simulate Checkout</h2>
+
       <div style={{ marginBottom: '15px' }}>
-        <p><strong>Gig:</strong> {gigTitle || 'Sample Web Development'}</p>
-        <p><strong>Total Price:</strong> ${price || '150.00'}</p>
+        <p><strong>Gig:</strong> {gigTitle || 'Selected gig'}</p>
+        <p><strong>Total Price:</strong> ${price ?? '—'}</p>
       </div>
 
-      <form onSubmit={handleCheckout}>
-        <CardInput onValidCard={(cardNumber) => setValidCardNumber(cardNumber)} />
+      <p>
+        This is a simulated payment for an accepted booking.
+        No real card details or payment are processed.
+      </p>
 
-        {message && (
-          <div style={{ margin: '10px 0', color: message.type === 'error' ? 'red' : 'green' }}>
-            {message.text}
-          </div>
-        )}
-
-        <button
-          type="submit"
-          disabled={!validCardNumber || loading}
+      {message && (
+        <div
+          role="status"
           style={{
-            width: '100%',
-            padding: '10px',
-            marginTop: '15px',
-            backgroundColor: validCardNumber ? '#007bff' : '#ccc',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: validCardNumber ? 'pointer' : 'not-allowed'
+            margin: '10px 0',
+            color: message.type === 'error' ? 'red' : 'green'
           }}
         >
-          {loading ? 'Processing...' : 'Pay & Book Gig'}
-        </button>
-      </form>
+          {message.text}
+        </div>
+      )}
+
+      <CardInput
+        onValidCard={(cardNumber) => setValidCardNumber(cardNumber)}
+      />
+
+      <button
+        type="button"
+        onClick={handleCheckout}
+        disabled={loading || !bookingId || !validCardNumber}
+        style={{
+          width: '100%',
+          padding: '10px',
+          marginTop: '15px',
+          backgroundColor: loading ? '#ccc' : '#007bff',
+          color: '#fff',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: loading || !bookingId || !validCardNumber
+            ? 'not-allowed'
+            : 'pointer'
+        }}
+      >
+        {loading ? 'Processing...' : 'Simulate Payment'}
+      </button>
     </div>
   );
 }

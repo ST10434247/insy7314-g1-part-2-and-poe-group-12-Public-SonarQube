@@ -1,0 +1,117 @@
+1. Backend testing (Postman + Newman)
+
+Step 1: Identify the API endpoints
+
+Open the backend/routes/ directory.
+Find the route file for the feature you are testing, for example:
+auth.js — registration and login.
+gigs.js — gig creation, listing, updating and deletion.
+bookings.js — booking creation and status changes.
+transactions.js — simulated payment transactions.
+admin.js — administrator dispute management.
+Read the route definitions and identify the HTTP method, endpoint path, required input, authentication requirements and expected response.
+
+Step 2: Create Postman requests
+
+For each important endpoint, create a request in Postman.
+
+For example, to create a booking:
+
+POST https://localhost:3000/api/bookings
+Authorization: Bearer <client-token>
+Content-Type: application/json
+{
+  "gigId": "<valid-gig-id>",
+  "requirements": "Create a basic business website."
+}
+
+Check that a valid request succeeds and returns the expected response.
+
+Step 3: Perform negative testing
+
+Test invalid input, missing authentication and unauthorised access.
+
+Examples:
+
+Test	Example	Expected result
+Missing required field	Send a booking without gigId	400 Bad Request
+Invalid identifier	Use an invalid MongoDB ID	400 Bad Request or the route's documented validation response
+Missing token	Send the booking request without an Authorization header	401 Unauthorized
+Wrong role	Try creating a gig using a client token	403 Forbidden
+Resource access violation	Try retrieving another user's booking	403 Forbidden or 404 Not Found, depending on the route
+Invalid state transition	Try completing a booking that is still pending	400 Bad Request
+
+Use the route's actual implementation to confirm the expected response. Do not assume every endpoint uses identical error codes.
+
+Step 4: Organise the collection
+
+Group requests by feature.
+Use Postman environment variables for the backend URL and tokens where practical.
+Include both successful and unsuccessful requests.
+Give requests clear names so the purpose of each test is obvious.
+
+Step 5: Run Newman
+
+From the project root, run:
+
+npx newman run path/to/your-collection.json
+
+Review the summary and resolve failures caused by your tests or implementation. Keep the collection and report any remaining issues.
+
+2. Frontend testing
+
+Step 1: Locate the relevant component
+
+Open the src/components/ directory.
+Identify the component for your assigned feature.
+Check whether it already has a corresponding test file.
+Review its props, API calls, state handling and user interactions.
+
+For example, if you are working on booking management, inspect BookingManagement.jsx and its related tests.
+
+Step 2: Identify the important behaviours
+
+List the behaviours that the component should support, such as:
+
+Rendering the correct information.
+Displaying the appropriate controls for the user's role.
+Handling valid and invalid form input.
+Showing loading and error states.
+Updating the interface after a successful API response.
+
+Step 3: Create a component test
+
+Use the existing React Testing Library setup. For example, a simple rendering test might look like this:
+
+import { render, screen } from '@testing-library/react';
+import BookingManagement from './BookingManagement';
+
+test('renders the booking management heading', () => {
+  render(<BookingManagement />);
+  expect(
+    screen.getByText(/booking management/i)
+  ).toBeInTheDocument();
+});
+
+Adjust the component setup and expected text to match the actual implementation. If the component requires authentication context or API data, provide the necessary mocks or providers.
+
+Step 4: Test user interaction
+
+For a form or action button, test the interaction and the resulting behaviour.
+
+Examples:
+
+Submit an empty form and check that validation feedback appears.
+Click an accept button and verify that the expected API call is made.
+Simulate an API error and check that an error message is displayed.
+Verify that a loading indicator appears while a request is pending, if the component supports it.
+
+Use userEvent from @testing-library/user-event for realistic user interactions where appropriate.
+
+Step 5: Run the frontend tests
+
+From the frontend directory:
+
+npm test -- --watchAll=false
+
+Check that the tests pass. Add meaningful tests for the assigned functionality rather than only testing that the component renders.
