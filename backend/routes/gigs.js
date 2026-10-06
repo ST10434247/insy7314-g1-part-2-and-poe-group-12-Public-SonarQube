@@ -6,7 +6,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 
 // express-validator provides validation and sanitisation for incoming request data.
-const { body, query } = require('express-validator');
+const { body, param, query, validationResult } = require('express-validator');
 
 // Imports the Mongoose model that represents gig listings in MongoDB.
 const Gig = require('../models/Gig');
