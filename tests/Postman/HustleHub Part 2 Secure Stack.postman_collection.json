@@ -1,0 +1,632 @@
+{
+  "info": {
+    "_postman_id": "7f4c2d91-3a62-4e91-b7f2-2026part2",
+    "name": "HustleHub Part 2 Secure Stack",
+    "description": "Part 2 Secure Stack tests for authentication, gig management, booking workflow, transactions, payment simulation, income tracking, validation and RBAC.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://localhost:3000"
+    },
+    {
+      "key": "freelancerEmail",
+      "value": "newman.freelancer@example.com"
+    },
+    {
+      "key": "freelancerPassword",
+      "value": "NewmanPass123!"
+    },
+    {
+      "key": "clientEmail",
+      "value": "newman.client@example.com"
+    },
+    {
+      "key": "clientPassword",
+      "value": "NewmanPass123!"
+    },
+    {
+      "key": "freelancerToken",
+      "value": ""
+    },
+    {
+      "key": "clientToken",
+      "value": ""
+    },
+    {
+      "key": "gigId",
+      "value": ""
+    },
+    {
+      "key": "bookingId",
+      "value": ""
+    },
+    {
+      "key": "transactionId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "1 - Register Freelancer",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{freelancerEmail}}\",\n  \"password\": \"{{freelancerPassword}}\",\n  \"role\": \"freelancer\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/register",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "register"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Freelancer registration returns 201', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test('Registered user has freelancer role', function () {",
+              "    pm.expect(pm.response.json().user.role).to.eql('freelancer');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "2 - Login Freelancer",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{freelancerEmail}}\",\n  \"password\": \"{{freelancerPassword}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Freelancer login returns 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "const json = pm.response.json();",
+              "pm.test('Login returns JWT token', function () {",
+              "    pm.expect(json.token).to.be.a('string').and.not.empty;",
+              "});",
+              "pm.collectionVariables.set('freelancerToken', json.token);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "3 - Create Gig",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{freelancerToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Newman Test Web Design Service\",\n  \"description\": \"Professional website design and development service for small businesses.\",\n  \"category\": \"Web Development\",\n  \"price\": 350,\n  \"deliveryDays\": 14\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/gigs",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "gigs"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Gig creation returns 201', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "const json = pm.response.json();",
+              "const gig = json.gig || json;",
+              "pm.test('Created gig has an ID', function () {",
+              "    pm.expect(gig._id).to.be.a('string').and.not.empty;",
+              "});",
+              "pm.collectionVariables.set('gigId', gig._id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "4 - Register Client",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{clientEmail}}\",\n  \"password\": \"{{clientPassword}}\",\n  \"role\": \"client\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/register",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "register"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Client registration returns 201', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test('Registered user has client role', function () {",
+              "    pm.expect(pm.response.json().user.role).to.eql('client');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "5 - Login Client",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{clientEmail}}\",\n  \"password\": \"{{clientPassword}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Client login returns 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "const json = pm.response.json();",
+              "pm.test('Client login returns JWT token', function () {",
+              "    pm.expect(json.token).to.be.a('string').and.not.empty;",
+              "});",
+              "pm.collectionVariables.set('clientToken', json.token);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "6 - Create Booking",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{clientToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"gigId\": \"{{gigId}}\",\n  \"requirements\": \"Please create a modern responsive website for my small business.\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/bookings",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "bookings"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Booking creation returns 201', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "const json = pm.response.json();",
+              "pm.test('Created booking has an ID', function () {",
+              "    pm.expect(json.booking._id).to.be.a('string').and.not.empty;",
+              "});",
+              "pm.test('Booking starts as pending', function () {",
+              "    pm.expect(json.booking.status).to.eql('pending');",
+              "});",
+              "pm.collectionVariables.set('bookingId', json.booking._id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "7 - Freelancer Accepts Booking",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{freelancerToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"accepted\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/bookings/{{bookingId}}/status",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "bookings",
+            "{{bookingId}}",
+            "status"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Booking acceptance returns 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Booking is accepted', function () {",
+              "    pm.expect(pm.response.json().booking.status).to.eql('accepted');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "8 - Create Transaction",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{clientToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"bookingId\": \"{{bookingId}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/transactions",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "transactions"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Transaction creation returns 201', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "const json = pm.response.json();",
+              "pm.test('Transaction has an ID', function () {",
+              "    pm.expect(json.transaction._id).to.be.a('string').and.not.empty;",
+              "});",
+              "pm.test('Transaction starts as pending', function () {",
+              "    pm.expect(json.transaction.status).to.eql('pending');",
+              "});",
+              "pm.collectionVariables.set('transactionId', json.transaction._id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "9 - Mark Transaction Paid",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{clientToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"paid\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/transactions/{{transactionId}}/status",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "transactions",
+            "{{transactionId}}",
+            "status"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Payment confirmation returns 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Transaction is marked paid', function () {",
+              "    pm.expect(pm.response.json().transaction.status).to.eql('paid');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 - Freelancer Income",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{freelancerToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/transactions/income",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "transactions",
+            "income"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Freelancer income returns 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "const json = pm.response.json();",
+              "pm.test('Income response contains totalIncome', function () {",
+              "    pm.expect(json).to.have.property('totalIncome');",
+              "});",
+              "pm.test('At least one paid transaction is recorded', function () {",
+              "    pm.expect(json.paidTransactions).to.be.at.least(1);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "11 - Reject Invalid Gig Data",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{freelancerToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"\",\n  \"description\": \"Short\",\n  \"category\": \"\",\n  \"price\": -100,\n  \"deliveryDays\": 0\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/gigs",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "gigs"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Invalid gig data is rejected with 400', function () {",
+              "    pm.response.to.have.status(400);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "12 - Reject Gig Creation Without Token",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "noauth"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Unauthorised Test Gig\",\n  \"description\": \"This request should be rejected because no JWT token is supplied.\",\n  \"category\": \"Testing\",\n  \"price\": 100,\n  \"deliveryDays\": 5\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/gigs",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "gigs"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Gig creation without token is rejected', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([401, 403]);",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
