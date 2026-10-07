@@ -7,6 +7,20 @@ import React, {
 import { AuthContext } from '../context/AuthContext';
 import PaymentPage from './PaymentPage';
 
+const getBookingStatusLabel = (status) => {
+  const labels = {
+    pending: 'Pending - waiting for freelancer acceptance',
+    accepted: 'Accepted - Payment available',
+    rejected: 'Rejected',
+    cancelled: 'Cancelled',
+    awaiting_confirmation: 'Awaiting confirmation from you.',
+    completed: 'Completed',
+    disputed: 'Disputed - Currently being reviewed. '
+  };
+
+  return labels[status] || status.replaceAll('_', ' ');
+};
+
 export default function ClientBookings() {
   const { token } = useContext(AuthContext);
 
@@ -165,10 +179,10 @@ export default function ClientBookings() {
             <article key={booking._id} className="booking-card">
               <h3>{booking.gig?.title || 'Gig booking'}</h3>
 
-              <p>Price: ${booking.price}</p>
+              <p>Price: R{booking.price}</p>
 
               <p>
-                Booking status: {booking.status.replaceAll('_', ' ')}
+                Booking status: {getBookingStatusLabel(booking.status)}
               </p>
 
               {transaction && (

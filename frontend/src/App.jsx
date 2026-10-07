@@ -163,7 +163,7 @@ function AppContent() {
   return (
     <div className="app-container">
       <header className="app-header">
-        <h1>WorkMarket Gigs</h1>
+        <h1>HustleHub </h1>
         <Navigation />
       </header>
 

@@ -1,6 +1,20 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../context/AuthContext';
 
+const getBookingStatusLabel = (status) => {
+  const labels = {
+    pending: 'Pending - Waiting for your response.',
+    accepted: 'Accepted - Work in progress.',
+    rejected: 'Rejected',
+    cancelled: 'Cancelled',
+    awaiting_confirmation: 'Awaiting client confirmation',
+    completed: 'Completed',
+    disputed: 'Disputed - Review by Admin required. '
+  };
+
+  return labels[status] || status.replaceAll('_', ' ');
+};
+
 export default function BookingManagement() {
   const { token, user } = useContext(AuthContext);
 
@@ -134,8 +148,8 @@ export default function BookingManagement() {
               {booking.client?.name || booking.client?.email || 'Unknown'}
             </p>
 
-            <p>Price: ${booking.price}</p>
-            <p>Status: {booking.status.replaceAll('_', ' ')}</p>
+            <p>Price: R{booking.price}</p>
+            <p>Status: {getBookingStatusLabel(booking.status)}</p>
 
             {booking.requirements && (
               <p>Requirements: {booking.requirements}</p>

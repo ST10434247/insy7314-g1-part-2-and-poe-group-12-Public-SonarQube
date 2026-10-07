@@ -94,7 +94,7 @@ export default function TaxDashboard() {
           borderRadius: '4px'
         }}>
           <small>Gross Earnings</small>
-          <h2>${formatAmount(summary.grossIncome)}</h2>
+          <h2>R{formatAmount(summary.grossIncome)}</h2>
         </div>
 
         <div style={{
@@ -106,7 +106,7 @@ export default function TaxDashboard() {
         }}>
           <small>Est. Tax Liability</small>
           <h2 style={{ color: '#c62828' }}>
-            -${formatAmount(summary.estimatedTax)}
+            -R{formatAmount(summary.estimatedTax)}
           </h2>
         </div>
 
@@ -119,7 +119,7 @@ export default function TaxDashboard() {
         }}>
           <small>Net Income</small>
           <h2 style={{ color: '#1565c0' }}>
-            ${formatAmount(summary.netIncome)}
+            R{formatAmount(summary.netIncome)}
           </h2>
         </div>
       </div>
