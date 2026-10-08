@@ -47,6 +47,40 @@ body {
   margin: 24px 0;
 }
 
+/*Landing page Introduction and Welcome message*/
+
+.welcome-section{
+  background-color: var(--accent-light);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 32px;
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+.welcome-eyebrow{
+  color: var(--primary);
+  font-size: 14px;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.welcome-section h2{
+  margin: 0 0 12px 0;
+  font-size: 28px;
+  color: var(--text-main);
+}
+
+.welcome-section p:last-child{
+  max-width: 700px;
+  margin: 0 auto;
+  color: var(--text-muted);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
 /* Navigation Bar */
 .nav-bar {
   background-color: var(--bg-card);
@@ -259,3 +293,123 @@ button:disabled {
 
 .valid-status { color: #10b981; font-weight: 600; }
 .invalid-status { color: #ef4444; font-weight: 600; }
+
+/*Make Responsive - Improve appearance*/
+
+
+@media (max-width: 768px) {
+  .app-container{
+    padding: 16px;
+  }
+
+  .app-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .app-header h1 {
+    text-align: center;
+  }
+
+  .nav-bar{
+    justify-content: center;
+  }
+
+  .login-form {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .logged-in-bar {
+    justify-content: center;
+    flex-wrap: wrap;
+    text-align: center;
+  }
+
+  .gig-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tax-dashboard> div{
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-container{
+    padding: 12px;
+  }
+
+  .nav-bar{
+    padding: 12px;
+  }
+
+  .login-form{
+    flex-direction: column;
+    align-items: stretch;
+  }
+    
+  .welcome-section{
+    padding: 24px 16px;
+  }
+    
+  .welcome-section h2{
+    font-size: 22px;
+  }
+
+  .login-form input,
+  .login-form select,
+  .login-form button {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .gig-card{
+    padding: 16px;
+  }
+
+  .gig-card-footer{
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .gig-card-footer button {
+    width: 100%;
+  }
+}
+
+/* Freelance user - income and tax liability dashboard*/
+
+.tax-dashboard {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin: 24px 0 32px 0;
+  box-shadow: var(--shadow-sm);
+}
+
+.tax-dashboard h2,
+.tax-dashboard h3 {
+  margin-top: 0;
+}
+
+.tax-dashboard p {
+  line-height: 1.5;
+}
+
+/* Successful booking popup message for client */
+
+.booking-success{
+  background: #e8f5e9;
+  color: #1b5e20;
+  padding: 14px 18px;
+  border-radius: 8px;
+  margin: 25px 0;
+  text-align: center;
+  font-weight: 500;
+}
+
+

@@ -81,10 +81,9 @@ function Navigation() {
             Welcome, <strong>{user.email}</strong> ({user.role})
           </span>
 
-          {user.role === 'freelancer' && <TaxDashboard />}
-
           <button onClick={logout}>Logout</button>
         </div>
+
       ) : (
         <form onSubmit={handleSubmit} className="login-form">
           <input
@@ -168,6 +167,32 @@ function AppContent() {
       </header>
 
       <hr className="hr-divider" />
+
+      {!user && (
+        <section className="welcome-section">
+          <p className="welcome-eyebrow">Welcome to HustleHub</p>
+
+          <h2>Find the right service. Get things done. </h2>
+
+          <p>
+            Browse services from talented freelancers, choose what you need,
+            and book with ease. Freelancers can showcase their skills,
+            manage bookings, earn extra income and pursue their hobbies or passion.
+          </p>
+        </section>
+      )}
+
+      {user?.role === 'freelancer' && (
+        <section className="dashboard-heading">
+          <h2>Freelancer Dashboard</h2>
+          <p>
+            Manage your services, track your income, and respond to client
+            booking requests.
+          </p>
+        </section>
+      )}
+
+      {user?.role === 'freelancer' && <TaxDashboard />}
 
       <GigList />
 
