@@ -76,6 +76,17 @@
       },
       "event": [
         {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const runId = Date.now().toString();",
+              "pm.collectionVariables.set('freelancerEmail', 'newman.freelancer.' + runId + '@example.com');",
+              "pm.collectionVariables.set('clientEmail', 'newman.client.' + runId + '@example.com');"
+            ]
+          }
+        },
+        {
           "listen": "test",
           "script": {
             "exec": [
@@ -182,7 +193,7 @@
               "pm.test('Created gig has an ID', function () {",
               "    pm.expect(gig._id).to.be.a('string').and.not.empty;",
               "});",
-              "pm.collectionVariables.set('gigId', gig._id);"
+              "if (gig && gig._id) pm.collectionVariables.set('gigId', gig._id);"
             ]
           }
         }
@@ -324,7 +335,7 @@
               "pm.test('Booking starts as pending', function () {",
               "    pm.expect(json.booking.status).to.eql('pending');",
               "});",
-              "pm.collectionVariables.set('bookingId', json.booking._id);"
+              "if (json.booking && json.booking._id) pm.collectionVariables.set('bookingId', json.booking._id);"
             ]
           }
         }
@@ -384,7 +395,119 @@
       ]
     },
     {
-      "name": "8 - Create Transaction",
+      "name": "8 - Freelancer Submits Work",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{freelancerToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"awaiting_confirmation\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/bookings/{{bookingId}}/status",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "bookings",
+            "{{bookingId}}",
+            "status"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Work submission returns 200', function () { pm.response.to.have.status(200); });",
+              "const json = pm.response.json();",
+              "pm.test('Booking awaits client confirmation', function () { pm.expect(json.booking.status).to.eql('awaiting_confirmation'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "9 - Client Confirms Work",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{clientToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"payment_pending\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/bookings/{{bookingId}}/status",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "bookings",
+            "{{bookingId}}",
+            "status"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Client work confirmation returns 200', function () { pm.response.to.have.status(200); });",
+              "const json = pm.response.json();",
+              "pm.test('Booking moves to payment_pending', function () { pm.expect(json.booking.status).to.eql('payment_pending'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 - Create Transaction",
       "request": {
         "method": "POST",
         "header": [
@@ -433,14 +556,14 @@
               "pm.test('Transaction starts as pending', function () {",
               "    pm.expect(json.transaction.status).to.eql('pending');",
               "});",
-              "pm.collectionVariables.set('transactionId', json.transaction._id);"
+              "if (json.transaction && json.transaction._id) pm.collectionVariables.set('transactionId', json.transaction._id);"
             ]
           }
         }
       ]
     },
     {
-      "name": "9 - Mark Transaction Paid",
+      "name": "11 - Mark Transaction Paid",
       "request": {
         "method": "PATCH",
         "header": [
@@ -493,7 +616,49 @@
       ]
     },
     {
-      "name": "10 - Freelancer Income",
+      "name": "12 - Verify Booking Completed",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{clientToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/bookings/{{bookingId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "bookings",
+            "{{bookingId}}"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Booking details return 200', function () { pm.response.to.have.status(200); });",
+              "const json = pm.response.json();",
+              "const booking = json.booking || json;",
+              "pm.test('Booking is completed after payment', function () { pm.expect(booking.status).to.eql('completed'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13 - Freelancer Income",
       "request": {
         "method": "GET",
         "header": [],
@@ -540,7 +705,7 @@
       ]
     },
     {
-      "name": "11 - Reject Invalid Gig Data",
+      "name": "14 - Reject Invalid Gig Data",
       "request": {
         "method": "POST",
         "header": [
@@ -588,7 +753,7 @@
       ]
     },
     {
-      "name": "12 - Reject Gig Creation Without Token",
+      "name": "15 - Reject Gig Creation Without Token",
       "request": {
         "method": "POST",
         "header": [

@@ -21,6 +21,9 @@ const bookingRoutes = require('./routes/bookings');
 const transactionRoutes = require('./routes/transactions');
 const adminRoutes = require('./routes/admin');
 const app = express();
+// Trust only local loopback proxies when determining the client IP.
+// This allows express-rate-limit to process forwarded headers in development.
+app.set('trust proxy', 'loopback');
 
 // Use Google DNS to resolve MongoDB Atlas SRV records.
 const dns = require('node:dns');
