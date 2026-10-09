@@ -4,9 +4,11 @@ import PublishGig from './PublishGig';
 
 export default function GigList() {
   const [gigs, setGigs] = useState([]);
+  const [loadingGigs, setLoadingGigs] = useState(true);
   const [selectedGig, setSelectedGig] = useState(null);
   const [requirements, setRequirements] = useState('');
   const [bookingError, setBookingError] = useState('');
+  const [bookingSuccess, setBookingSuccess] = useState('');
   const [bookingLoading, setBookingLoading] = useState(false);
   const { token, user } = useContext(AuthContext);
 
@@ -14,6 +16,7 @@ export default function GigList() {
 // Load active gigs from the backend when the marketplace opens.
 useEffect(() => {
   const loadGigs = async () => {
+
     try {
       const response = await fetch('/api/gigs');
 
@@ -29,6 +32,8 @@ useEffect(() => {
     } catch (error) {
       console.error('Failed to load gigs:', error);
       setGigs([]);
+    } finally{
+      setLoadingGigs(false);
     }
   };
 
@@ -43,6 +48,14 @@ useEffect(() => {
 const handleBooking = async () => {
   if (!token || !selectedGig) {
     setBookingError('Please log in and select a gig.');
+    return;
+  }
+
+  // Prevent empty booking requirements form being submitted.
+  if(!requirements.trim()) {
+    setBookingError(
+      'Please describe your project requirements before submitting the booking.'
+    );
     return;
   }
 
@@ -70,7 +83,7 @@ const handleBooking = async () => {
       );
     }
 
-    alert('Booking request submitted. Waiting for freelancer acceptance.');
+    setBookingSuccess('Booking request submitted successfully! The freelancer will review your request. ');
     setSelectedGig(null);
     setRequirements('');
   } catch (error) {
@@ -86,7 +99,18 @@ const handleBooking = async () => {
         <PublishGig onGigPublished={handleGigPublished} />
       )}
 
+      {user?.role !== 'freelancer' && (
+        <>
+
       <h2 className="section-title">Explore Services</h2>
+      
+      {loadingGigs ? (
+        <p className="gig-status">Loading available gig services...</p>
+      ) : gigs.length === 0 ? (
+        <p className="gig-status">
+          No services are currently available.
+        </p>
+      ) : (
       <div className="gig-grid">
         {gigs.map((gig) => (
           <div key={gig._id} className="gig-card">
@@ -94,25 +118,41 @@ const handleBooking = async () => {
               <h3>{gig.title}</h3>
               <p>{gig.description}</p>
             </div>
+
             <div className="gig-card-footer">
               <p className="gig-price">R{gig.price}</p>
+
               {user?.role === 'client' && (
                 <button
                   onClick={() => {
                     setSelectedGig(gig);
                     setRequirements('');
                     setBookingError('');
+                    setBookingSuccess('');
                   }}
                 >
                   Book Service
                 </button>
               )}
-              {!user && <small className="login-prompt">Log in to book</small>}
+
+              {!user && (
+              <small className="login-prompt">
+                Log in to book
+              </small>
+              )}
             </div>
           </div>
         ))}
       </div>
+      )}
+    </>
+  )}
 
+  {bookingSuccess && (
+    <div className="booking-success" role="status">
+      {bookingSuccess}
+    </div>
+  )}
       
       {selectedGig && (
         <div className="modal-overlay">
@@ -160,6 +200,7 @@ const handleBooking = async () => {
                   setSelectedGig(null);
                   setRequirements('');
                   setBookingError('');
+                  setBookingSuccess('');
                 }}
                 disabled={bookingLoading}
                 style={{ background: '#e4e6eb', color: '#001e00' }}

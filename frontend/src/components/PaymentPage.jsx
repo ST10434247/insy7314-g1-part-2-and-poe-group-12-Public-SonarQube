@@ -108,7 +108,7 @@ export default function PaymentPage({ bookingId, gigTitle, price, onPaymentCompl
 
       <div style={{ marginBottom: '15px' }}>
         <p><strong>Gig:</strong> {gigTitle || 'Selected gig'}</p>
-        <p><strong>Total Price:</strong> ${price ?? '—'}</p>
+        <p><strong>Total Price:</strong> R{price ?? '—'}</p>
       </div>
 
       <p>

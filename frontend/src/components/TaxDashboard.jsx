@@ -72,54 +72,46 @@ export default function TaxDashboard() {
   }
 
   return (
-    <div style={{
-      padding: '20px',
-      border: '1px solid #ccc',
-      borderRadius: '8px',
-      background: '#fff'
-    }}>
+    <div className="tax-dashboard">
       <h3>Freelancer Income & Tax Estimation</h3>
 
       <div style={{
-        display: 'flex',
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, 1fr)',
         gap: '20px',
-        marginBottom: '15px',
-        flexWrap: 'wrap'
+        marginBottom: '24px'
       }}>
         <div style={{
-          flex: 1,
-          minWidth: '150px',
-          padding: '10px',
+          minHeight: '90px',
+          padding: '18px',
           background: '#e8f5e9',
           borderRadius: '4px'
         }}>
           <small>Gross Earnings</small>
-          <h2>${formatAmount(summary.grossIncome)}</h2>
+          <h2>R{formatAmount(summary.grossIncome)}</h2>
         </div>
 
         <div style={{
-          flex: 1,
-          minWidth: '150px',
-          padding: '10px',
+          minHeight: '90px',
+          padding: '18px',
           background: '#ffebee',
           borderRadius: '4px'
         }}>
           <small>Est. Tax Liability</small>
           <h2 style={{ color: '#c62828' }}>
-            -${formatAmount(summary.estimatedTax)}
+            -R{formatAmount(summary.estimatedTax)}
           </h2>
         </div>
 
         <div style={{
-          flex: 1,
-          minWidth: '150px',
-          padding: '10px',
+          minHeight: '90px',
+          padding: '18px',
           background: '#e3f2fd',
           borderRadius: '4px'
         }}>
           <small>Net Income</small>
           <h2 style={{ color: '#1565c0' }}>
-            ${formatAmount(summary.netIncome)}
+            R{formatAmount(summary.netIncome)}
           </h2>
         </div>
       </div>
