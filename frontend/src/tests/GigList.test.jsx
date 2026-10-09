@@ -1,5 +1,5 @@
 import {render, screen, fireEvent } from '@testing-library/react';
-import GigList from './GigList';
+import GigList from '../components/GigList';
 import { AuthContext } from '../context/AuthContext';
 
 const mockGigs = [
