@@ -39,10 +39,10 @@ router.post(
                 });
             }
 
-            // Payment is only available after the freelancer accepts the booking.
-            if (booking.status !== 'accepted') {
+            // Payment is only available after the client confirms the work.
+            if (booking.status !== 'payment_pending') {
                 return res.status(400).json({
-                    error: 'A transaction can only be created for an accepted booking.'
+                    error: 'Payment is only available after the client confirms the work.'
                 });
             }
 
@@ -270,12 +270,31 @@ router.patch(
                     error: 'Only pending transactions can be updated.'
                 });
             }
+            // Retrieve the associated booking and verify client ownership.
+            const booking = await Booking.findOne({
+                _id: transaction.booking,
+                client: req.user.id
+            });
+
+            if (!booking) {
+                return res.status(404).json({
+                    error: 'Booking not found.'
+                });
+            }
+
+            // A booking can only be completed after payment succeeds.
+            if (status === 'paid' && booking.status !== 'payment_pending') {
+                return res.status(400).json({
+                    error: 'Payment requires a booking awaiting payment.'
+                });
+            }
 
             transaction.status = status;
 
-            // Record the time when the client marks it as paid.
             if (status === 'paid') {
                 transaction.paidAt = new Date();
+                booking.status = 'completed';
+                await booking.save();
             }
 
             await transaction.save();

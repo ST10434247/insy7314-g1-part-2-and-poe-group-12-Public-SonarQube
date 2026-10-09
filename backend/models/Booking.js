@@ -8,7 +8,9 @@ const BOOKING_STATUSES = [
     'accepted',
     'rejected',
     'cancelled',
+    'payment_pending',
     'awaiting_confirmation',
+    'payment_pending',
     'completed',
     'disputed'
 ];

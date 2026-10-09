@@ -10,12 +10,13 @@ import PaymentPage from './PaymentPage';
 const getBookingStatusLabel = (status) => {
   const labels = {
     pending: 'Pending - waiting for freelancer acceptance',
-    accepted: 'Accepted - Payment available',
+    accepted: 'Accepted',
     rejected: 'Rejected',
     cancelled: 'Cancelled',
     awaiting_confirmation: 'Awaiting confirmation from you.',
+    payment_pending: 'Work confirmed - payment required',
     completed: 'Completed',
-    disputed: 'Disputed - Currently being reviewed. '
+    disputed: 'Disputed - Currently being reviewed.'
   };
 
   return labels[status] || status.replaceAll('_', ' ');
@@ -98,7 +99,8 @@ export default function ClientBookings() {
     const actionLabels = {
       completed: 'confirm this booking as completed',
       disputed: 'raise a dispute for this booking',
-      cancelled: 'cancel this booking'
+      cancelled: 'cancel this booking',
+      payment_pending: 'confirm the work and proceed to payment'
     };
 
     if (!window.confirm(`Are you sure you want to ${actionLabels[status]}?`)) {
@@ -125,6 +127,19 @@ export default function ClientBookings() {
       }
 
       await fetchBookings();
+
+      if (status === 'payment_pending') {
+        const booking = bookings.find(
+          (item) => item._id === bookingId
+        );
+
+        if (booking) {
+          setSelectedBooking({
+            ...booking,
+            status: 'payment_pending'
+          });
+        }
+      }
     } catch (err) {
       setError(err.message || 'Unable to update booking.');
     } finally {
@@ -189,7 +204,7 @@ export default function ClientBookings() {
                 <p>Payment status: {transaction.status}</p>
               )}
 
-              {booking.status === 'accepted' && !isPaid && (
+              {booking.status === 'payment_pending' && !isPaid && (
                 <button
                   onClick={() => setSelectedBooking(booking)}
                   disabled={transaction?.status === 'failed' || isUpdating}
@@ -224,12 +239,12 @@ export default function ClientBookings() {
 
               {booking.status === 'awaiting_confirmation' && (
                 <div className="booking-actions">
-                  <button
-                    onClick={() => updateBooking(booking._id, 'completed')}
-                    disabled={isUpdating}
-                  >
-                    Confirm Completion
-                  </button>
+                <button
+                  onClick={() => updateBooking(booking._id, 'payment_pending')}
+                  disabled={isUpdating}
+                >
+                  Confirm Work and Proceed to Payment
+                </button>
 
                   <button
                     onClick={() => updateBooking(booking._id, 'disputed')}
@@ -246,12 +261,12 @@ export default function ClientBookings() {
                     This booking is disputed.
                   </p>
 
-                  <button
-                    onClick={() => updateBooking(booking._id, 'completed')}
-                    disabled={isUpdating}
-                  >
-                    Withdraw Dispute and Confirm
-                  </button>
+                <button
+                  onClick={() => updateBooking(booking._id, 'payment_pending')}
+                  disabled={isUpdating}
+                >
+                  Withdraw Dispute and Proceed to Payment
+                </button>
                 </div>
               )}
 

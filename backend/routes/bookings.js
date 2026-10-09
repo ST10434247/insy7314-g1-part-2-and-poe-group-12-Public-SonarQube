@@ -12,6 +12,7 @@ const ALLOWED_STATUSES = [
     'accepted',
     'rejected',
     'cancelled',
+    'payment_pending',
     'awaiting_confirmation',
     'completed',
     'disputed'
@@ -284,20 +285,20 @@ router.patch(
                 permitted = true;
             }
 
-            // Only the client can confirm or dispute submitted work.
+            // The client confirms the work, which makes payment available.
             if (
                 booking.status === 'awaiting_confirmation' &&
                 isClient &&
-                ['completed', 'disputed'].includes(status)
+                ['payment_pending', 'disputed'].includes(status)
             ) {
                 permitted = true;
             }
 
-            // A client can withdraw a dispute and confirm completion.
+            // A client can withdraw a dispute and make payment available.
             if (
                 booking.status === 'disputed' &&
                 isClient &&
-                status === 'completed'
+                status === 'payment_pending'
             ) {
                 permitted = true;
             }
