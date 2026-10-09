@@ -92,7 +92,8 @@ export default function PublishGig({ onGigPublished }) {
         setDeliveryDays('');
 
         if (onGigPublished) {
-          onGigPublished(data);
+          // Pass the actual gig, rather than the full API response.
+          onGigPublished(data.gig || data);
         }
       } else {
         const validationMessage = data.errors?.length
