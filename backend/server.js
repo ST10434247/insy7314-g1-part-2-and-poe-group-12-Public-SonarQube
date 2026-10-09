@@ -31,16 +31,20 @@ dns.setServers(['8.8.8.8']);
 
 // Security middleware adds HTTP security headers and restricts which resources
 // the application is allowed to load, reducing the risk of common browser-based attacks.
+
 app.use(
   helmet.contentSecurityPolicy({
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", "data:"],
       connectSrc: ["'self'", "https://localhost:3000"],
       fontSrc: ["'self'"],
       objectSrc: ["'none'"],
+      baseUri: ["'self'"],
+      formAction: ["'self'"],
+      frameAncestors: ["'none'"],
       upgradeInsecureRequests: [],
     },
   })
