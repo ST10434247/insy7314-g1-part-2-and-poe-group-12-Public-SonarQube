@@ -66,3 +66,28 @@ test('client can open the booking form', async () => {
         screen.getByText(/request booking: seamstress sewing service/i)
     ).toBeInTheDocument();
 });
+
+test('prevents booking when the client has left the requirements description blank', async () => {
+    renderGigList();
+
+    const bookButton = await screen.findByRole('button', {
+        name: /book service/i
+    });
+
+    fireEvent.click(bookButton);
+
+    const submitButton = screen.getByRole('button', {
+        name: /submit request/i
+    });
+
+    fireEvent.click(submitButton);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+        /please describe your project requirements before submitting the booking/i
+    );
+
+    expect(global.fetch).not.toHaveBeenCalledWith(
+        '/api/bookings',
+        expect.anything()
+    );
+});
