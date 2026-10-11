@@ -112,7 +112,7 @@ If administrator provisioning is required, run:
 node backend/scripts/createAdmin.js
 ```
 
-Administrator accounts should not be created through public registration.
+Administrator accounts can not be created through public registration.
 
 ## Application Workflow
 
