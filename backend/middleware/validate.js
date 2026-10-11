@@ -1,4 +1,4 @@
-// INPUT VALIDATION
+// INPUT VALIDATION - REJECT INVALID DATA
 // (IIE, 2026), (express-validator, 2026)
 
 const { validationResult } = require('express-validator');

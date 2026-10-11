@@ -29,6 +29,9 @@ app.set('trust proxy', 'loopback');
 const dns = require('node:dns');
 dns.setServers(['8.8.8.8']);
 
+// (Helmet, 2026)  security header CSP Content Security Policy
+// ()
+
 // Security middleware adds HTTP security headers and restricts which resources
 // the application is allowed to load, reducing the risk of common browser-based attacks.
 
@@ -54,8 +57,13 @@ app.use(
 // consumption and help protect the API against oversized request attacks.
 app.use(express.json({ limit: '10kb' }));
 
+// (ExorTek, 2026)
+// (Friedly and Vedant, 2023)  MongoDB query sanitisation
+
 // Sanitise incoming request data to prevent MongoDB operator injection.
 app.use(mongoSanitize());
+
+// (Nodejs, 2026)  General API  and Authentication Rate Limits
 
 // Apply a general rate limit to API requests.
 const apiLimiter = rateLimit({

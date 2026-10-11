@@ -1,6 +1,10 @@
 const mongoose = require('mongoose');
 
 // Defines the structure and validation rules for user records.
+
+// (dcode, 2025)
+// passwords must be hashed and compared 
+
 const userSchema = new mongoose.Schema(
   {
     email: {

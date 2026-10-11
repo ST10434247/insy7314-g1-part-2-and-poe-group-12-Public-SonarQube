@@ -6,6 +6,8 @@ const { authenticateToken, authorizeRoles } = require('../middleware/auth');
 
 const router = express.Router();
 
+// (auth0Developers, 2022) RBAC Role Based Access Control
+
 // These are the only outcomes an admin can assign to a disputed booking.
 const RESOLUTION_STATUSES = [
     'completed',

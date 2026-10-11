@@ -1,8 +1,9 @@
+
 {
   "info": {
     "_postman_id": "389b563e-f8c7-4dd9-8a90-6b5e014cf2cd",
     "name": "HustleHub API Tests - Updated",
-    "description": "Development API tests for authentication, gig CRUD, input validation and role-based access. Uses fresh accounts and dynamic IDs on every run.",
+    "description": " // (PostMan Docs, 2026).   Development API tests for authentication, gig CRUD, input validation and role-based access. Uses fresh accounts and dynamic IDs on every run.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [

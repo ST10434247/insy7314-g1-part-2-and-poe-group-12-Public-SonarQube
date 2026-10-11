@@ -14,6 +14,8 @@ const User = require('../models/User');
 // Registration validates the supplied credentials, prevents duplicate accounts,
 // hashes the password before storage, and returns only non-sensitive user information.
 // Register a new user and store the password as a bcrypt hash.
+
+// (bsmith-auth0, 2026)
 router.post(
   '/register',
   [

@@ -39,6 +39,9 @@ afterEach(() => {
     jest.restoreAllMocks();
 });
 
+//(Borenkraout, M.,2024)
+// Testing to see if the Gigs load correctly from the API.
+
 test('loads and displays gigs from the API', async() => {
     renderGigList();
 
@@ -53,6 +56,9 @@ test('loads and displays gigs from the API', async() => {
     expect(screen.getByText('R450')).toBeInTheDocument();
 });
 
+//(Borenkraout, M., 2024)
+// Make sure booking form opens opens when client select it.
+
 test('client can open the booking form', async () => {
     renderGigList();
 
@@ -66,6 +72,10 @@ test('client can open the booking form', async () => {
         screen.getByText(/request booking: seamstress sewing service/i)
     ).toBeInTheDocument();
 });
+
+//(Borenkraout, M., 2024)
+// Testing to see make sure client leaves a description (not empty or blank) when 
+// describing what work need to be done for the gig. (additional info for the freelancer)
 
 test('prevents booking when the client has left the requirements description blank', async () => {
     renderGigList();
