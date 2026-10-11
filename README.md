@@ -305,31 +305,31 @@ HustleHub demonstrates a full-stack MERN gig marketplace with authentication, ro
 
 ## References
 
-Auth0, 2020. Navigating RS256 and JWKS [code]. 
+Meyer,S. 2020. Navigating RS256 and JWKS [code]. 
 Available at:<https://auth0.com/blog/navigating-rs256-and-jwks/>
 [Accessed 17 August 2026].
 
-Auth0, 2026. JSON Web Token (JWT) implementation using jsonwebtoken [code]. 
+bsmith-auth0, 2026. JSON Web Token (JWT) implementation using jsonwebtoken [code]. 
 Available at:https://www.npmjs.com/package/jsonwebtoken 
 [Accessed 1 October 2026].
 
-Auth0, 2026a. Express.js Code Sample: API Role-Based Access Control [code].
+auth0Developers, 2022. Express.js Code Sample: API Role-Based Access Control [code].
 Available at:<https://developer.auth0.com/resources/code-samples/api/express/basic-role-based-access-control>
 [Accessed 17 August 2026].
 
-Auth0, 2026b. Node.js API Authorization By Example [code].
+Arias, D. 2023. Node.js API Authorization By Example [code].
 Available at:<https://developer.auth0.com/resources/guides/api/express/basic-authorization>
 [Accessed 18 August 2026].
 
-bcryptjs, 2026. bcryptjs [code]. 
+dcode, 2025. bcryptjs [code]. 
 Available at:<https://www.npmjs.com/package/bcryptjs>
 [Accessed 18 August 2026].
 
-ExorTek, n.d. @exortek/express-mongo-sanitize [code]. 
+ExorTek, 2026. @exortek/express-mongo-sanitize [code]. 
 Available at:https://www.npmjs.com/package/@exortek/express-mongo-sanitize
 [Accessed 1 October 2026].
 
-Express Rate Limit, n.d. express-rate-limit documentation [code]. 
+Friedly, N. and Vedant, K., 2023. express-rate-limit documentation [code]. 
 Available at:https://github.com/express-rate-limit/express-rate-limit 
 [Accessed 1 October 2026].
 
@@ -341,21 +341,21 @@ express-validator, 2026. express-validator documentation [code].
 Available at:<https://express-validator.github.io/docs/>
 [Accessed 18 August 2026].
 
-Helmet, n.d. Helmet documentation: security headers and Content Security Policy [code]. 
+Helmet, 2026. Helmet documentation: security headers and Content Security Policy [code]. 
 Available at:https://helmet.js.org/ [Accessed 1 October 2026].
 
-Mongoose, n.d. Mongoose validation documentation [code]. 
+Mongoose, 2026. Mongoose validation documentation [code]. 
 Available at: https://mongoosejs.com/docs/validation.html 
 [Accessed 1 October 2026].
 
-Node.js, n.d. HTTPS documentation [code]. 
+Node.js, 2026. HTTPS documentation [code]. 
 Available at: https://nodejs.org/api/https.html [Accessed 1 October 2026].
 
-Postman, n.d. Install and run Newman [code]. 
+Postman Docs, 2026. Install and run Newman [code]. 
 Available at:https://learning.postman.com/docs/reference/newman-cli/installing-running-newman/
 [Accessed 1 October 2026].
 
-Testing Library, n.d. React Testing Library documentation [code]. 
+Borenkraout, M. 2026. React Testing Library documentation [code]. 
 Available at:https://testing-library.com/docs/react-testing-library/intro/
 [Accessed 1 October 2026].
 
