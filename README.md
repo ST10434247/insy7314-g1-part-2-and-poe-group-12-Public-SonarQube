@@ -355,7 +355,7 @@ Postman Docs, 2026. Install and run Newman [code].
 Available at:https://learning.postman.com/docs/reference/newman-cli/installing-running-newman/
 [Accessed 1 October 2026].
 
-Borenkraout, M. 2026. React Testing Library documentation [code]. 
+Borenkraout, M. 2024. React Testing Library documentation [code]. 
 Available at:https://testing-library.com/docs/react-testing-library/intro/
 [Accessed 1 October 2026].
 
