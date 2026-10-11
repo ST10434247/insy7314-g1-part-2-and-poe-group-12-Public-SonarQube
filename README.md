@@ -112,7 +112,7 @@ If administrator provisioning is required, run:
 node backend/scripts/createAdmin.js
 ```
 
-Administrator accounts should not be created through public registration.
+Administrator accounts can not be created through public registration.
 
 ## Application Workflow
 
@@ -201,71 +201,95 @@ The current automated frontend test suite verifies the card-input component, inc
 Latest test result:
 
 ```text
-Test Suites: 1 passed, 1 total
-Tests:       2 passed, 2 total
-Snapshots:   0 total
+Test Suites: 2 passed, 2 total 
+Tests: 5 passed, 5 total 
+Snapshots: 0 total
 ```
 
 ### Postman and Newman Tests
 
-The Part 2 API collection is located at:
+HustleHub uses Postman collections and Newman to automate backend API testing. The collections test authentication, authorisation, input validation, gig management, booking workflows, transaction processing and income retrieval.
+
+Newman runs the Postman collections from the project root. The `--insecure` option is used for local development because the backend uses a self-signed HTTPS certificate. This option is intended for local testing and is not recommended for production use.
+
+#### Backend Test Suite 1: HustleHub API Tests
+
+Collection file:
+
+```text
+tests/Postman/HustleHub API Tests.postman_collection.json
+```
+
+Run the collection:
+
+```bash
+npx newman run "tests\Postman\HustleHub API Tests.postman_collection.json" --insecure
+```
+
+**Verified test results:**
+
+```text
+Requests:    19 executed, 0 failed
+Assertions:  26 executed, 0 failed
+```
+
+This collection tests:
+
+1. Freelancer registration and login.
+2. JWT authentication and token generation.
+3. Gig creation, retrieval, updating and deletion.
+4. Input validation and rejection of invalid gig data.
+5. Role-based access control, including restrictions on client gig creation.
+6. Resource ownership, including rejection of updates by a non-owner.
+7. Rejection of unauthenticated requests.
+
+These tests help verify that the API processes valid requests and enforces access restrictions.
+
+#### Backend Test Suite 2: HustleHub Part 2 Secure Stack
+
+Collection file:
 
 ```text
 tests/Postman/HustleHUB Part 2 Secure Stack.postman_collection.json
 ```
 
-Run the collection from the project root:
+Run the collection:
 
 ```bash
 npx newman run "tests\Postman\HustleHUB Part 2 Secure Stack.postman_collection.json" --insecure
 ```
 
-The `--insecure` option is used because the local development server uses a self-signed HTTPS certificate.
+This collection tests the wider marketplace workflow, including:
 
-The automated collection covers:
+1. Freelancer registration.
+2. Freelancer login and JWT generation.
+3. Freelancer gig creation.
+4. Client registration.
+5. Client login and JWT generation.
+6. Client booking creation.
+7. Freelancer acceptance of a booking.
+8. Transaction creation.
+9. Transaction payment or status update.
+10. Freelancer income retrieval.
+11. Rejection of invalid gig data.
+12. Rejection of unauthenticated gig creation.
 
-1. Freelancer registration
-2. Freelancer login and JWT generation
-3. Freelancer gig creation
-4. Client registration
-5. Client login and JWT generation
-6. Client booking creation
-7. Freelancer booking acceptance
-8. Transaction creation
-9. Transaction payment/status update
-10. Freelancer income retrieval
-11. Invalid gig-data rejection
-12. Unauthenticated gig-creation rejection
+The collection provides additional testing of booking and transaction workflows alongside authentication, validation and access control.
 
-This provides automated evidence for authentication, authorisation, validation, gig management, booking functionality and transaction functionality.
+Record the final Newman summary for this collection after running it, including the number of requests, test scripts and assertions passed or failed. This keeps the README's test evidence accurate and reproducible.
 
-## Security Testing Evidence
+### Security Testing Evidence
 
-The project also contains Postman security-testing evidence under:
+Postman collections and supporting evidence are stored in:
 
 ```text
 tests/Postman/
-```
-
-and supporting screenshots under:
-
-```text
 tests/screenshots/
 ```
+The security tests cover valid registration, duplicate email rejection, invalid email and password validation, invalid role rejection, successful and unsuccessful login, protected endpoint access with valid, missing or invalid tokens, missing required registration fields, role restrictions and resource ownership.
 
-The security tests cover areas such as:
+Together, the two backend collections test both individual API operations and the main marketplace workflow. Their results provide evidence of authentication, authorisation, input validation, gig management, booking handling and transaction functionality.
 
-* Valid registration
-* Duplicate email rejection
-* Invalid email rejection
-* Password validation
-* Invalid role rejection
-* Valid login
-* Invalid credentials
-* Protected endpoint access with a valid token
-* Protected endpoint access without a token
-* Protected endpoint access with an invalid token
-* Missing required registration fields
 
 ## Important Security Notes
 
@@ -280,3 +304,61 @@ The security tests cover areas such as:
 HustleHub demonstrates a full-stack MERN gig marketplace with authentication, role-based authorisation, resource ownership controls, validation, sanitisation, rate limiting, security headers, HTTPS, React frontend functionality and automated API/frontend testing.
 
 ## References
+
+Auth0, 2020. Navigating RS256 and JWKS [code]. 
+Available at:<https://auth0.com/blog/navigating-rs256-and-jwks/>
+[Accessed 17 August 2026].
+
+Auth0, 2026. JSON Web Token (JWT) implementation using jsonwebtoken [code]. 
+Available at:https://www.npmjs.com/package/jsonwebtoken 
+[Accessed 1 October 2026].
+
+Auth0, 2026a. Express.js Code Sample: API Role-Based Access Control [code].
+Available at:<https://developer.auth0.com/resources/code-samples/api/express/basic-role-based-access-control>
+[Accessed 17 August 2026].
+
+Auth0, 2026b. Node.js API Authorization By Example [code].
+Available at:<https://developer.auth0.com/resources/guides/api/express/basic-authorization>
+[Accessed 18 August 2026].
+
+bcryptjs, 2026. bcryptjs [code]. 
+Available at:<https://www.npmjs.com/package/bcryptjs>
+[Accessed 18 August 2026].
+
+ExorTek, n.d. @exortek/express-mongo-sanitize [code]. 
+Available at:https://www.npmjs.com/package/@exortek/express-mongo-sanitize
+[Accessed 1 October 2026].
+
+Express Rate Limit, n.d. express-rate-limit documentation [code]. 
+Available at:https://github.com/express-rate-limit/express-rate-limit 
+[Accessed 1 October 2026].
+
+Express.js, 2026. Express routing [code]. 
+Available at:<https://expressjs.com/en/guide/routing.html>
+[Accessed 3 September 2026].
+
+express-validator, 2026. express-validator documentation [code].
+Available at:<https://express-validator.github.io/docs/>
+[Accessed 18 August 2026].
+
+Helmet, n.d. Helmet documentation: security headers and Content Security Policy [code]. 
+Available at:https://helmet.js.org/ [Accessed 1 October 2026].
+
+Mongoose, n.d. Mongoose validation documentation [code]. 
+Available at: https://mongoosejs.com/docs/validation.html 
+[Accessed 1 October 2026].
+
+Node.js, n.d. HTTPS documentation [code]. 
+Available at: https://nodejs.org/api/https.html [Accessed 1 October 2026].
+
+Postman, n.d. Install and run Newman [code]. 
+Available at:https://learning.postman.com/docs/reference/newman-cli/installing-running-newman/
+[Accessed 1 October 2026].
+
+Testing Library, n.d. React Testing Library documentation [code]. 
+Available at:https://testing-library.com/docs/react-testing-library/intro/
+[Accessed 1 October 2026].
+
+The Independent Institute of Education (IIE), 2026.INFORMATION SYSTEMS 3D INSY7314 [APPLICATION DEVELOPMENT SECURITY MODULE MANUAL].
+The Independent Institute of Education. Unpublished.
+
