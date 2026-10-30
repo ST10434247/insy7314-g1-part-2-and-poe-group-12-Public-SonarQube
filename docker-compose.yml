@@ -18,3 +18,14 @@ services:
     volumes:
       - ./backend/certs:/app/certs:ro
       - ./logs:/app/logs
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: hustlehub-frontend
+    restart: unless-stopped
+    ports:
+      - "3001:80"
+    depends_on:
+      - backend
