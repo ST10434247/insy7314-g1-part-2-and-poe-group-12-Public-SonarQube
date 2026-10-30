@@ -10,6 +10,7 @@ require('dotenv').config({
 // Import the gig routes for creating, viewing, updating, and deleting gigs.
 const gigRoutes = require('./routes/gigs');
 const connectDB = require('./config/db');
+const logger = require('./config/logger');
 const mongoSanitize = require('@exortek/express-mongo-sanitize');
 const { rateLimit } = require('express-rate-limit');
 const fs = require('fs');
@@ -109,6 +110,13 @@ app.use('/api/transactions', transactionRoutes);
 // Return a controlled response when no route matches the request.
 // This must come after all application routes.
 app.use((req, res) => {
+  logger.warn('ROUTE_NOT_FOUND', {
+    event: 'ROUTE_NOT_FOUND',
+    method: req.method,
+    url: req.originalUrl,
+    ip: req.ip
+  });
+
   res.status(404).json({
     error: 'Route not found'
   });
@@ -117,7 +125,14 @@ app.use((req, res) => {
 // Handle unexpected errors after all routes and other middleware.
 // Internal details are logged on the server, not returned to clients.
 app.use((err, req, res, next) => {
-  console.error(err);
+  logger.error('SYSTEM_ERROR', {
+    event: 'SYSTEM_ERROR',
+    method: req.method,
+    url: req.originalUrl,
+    ip: req.ip,
+    error: err.message,
+    stack: err.stack
+  });
 
   res.status(500).json({
     error: 'An internal server error occurred.'
@@ -142,10 +157,18 @@ const startServer = async () => {
       )
     };
     https.createServer(sslOptions, app).listen(PORT, () => {
-      console.log(`HTTPS Server running on port ${PORT}`);
+      logger.info('SERVER_STARTED', {
+        event: 'SERVER_STARTED',
+        port: PORT,
+        protocol: 'HTTPS'
+      });
     });
   } catch (error) {
-    console.error('Server startup failed:', error.message);
+    logger.error('SERVER_STARTUP_FAILED', {
+      event: 'SERVER_STARTUP_FAILED',
+      error: error.message,
+      stack: error.stack
+    });
     process.exit(1);
   }
 };
