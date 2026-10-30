@@ -6,6 +6,8 @@ const { body } = require('express-validator');
 const handleValidationErrors = require('../middleware/validate');
 const { authenticateToken } = require('../middleware/auth');
 const User = require('../models/User');
+const logAudit = require('../utils/auditLogger');
+const logger = require('../config/logger');
 
 // USER REGISTRATION AND LOGIN
 // VALIDATES USER'S DETAILS, BCRYPT FOR HASH PASSWORD THEN JWT SESSION TOKEN IF LOGIN SUCCESSFUL
@@ -52,6 +54,17 @@ router.post(
         role,
       });
 
+      await logAudit({
+        userId: user._id,
+        userEmail: user.email,
+        action: 'USER_REGISTERED',
+        ipAddress: req.ip,
+        details: {
+          role: user.role
+        },
+        status: 'SUCCESS'
+      });
+
       return res.status(201).json({
         message: 'User registered successfully!',
         user: {
@@ -68,7 +81,21 @@ router.post(
         });
       }
 
-      console.error('Registration failed:', error.message);
+      logger.error('REGISTRATION_FAILED', {
+        event: 'REGISTRATION_FAILED',
+        error: error.message,
+        stack: error.stack
+      });
+
+      await logAudit({
+        userEmail: req.body.email,
+        action: 'USER_REGISTRATION_FAILED',
+        ipAddress: req.ip,
+        details: {
+          reason: 'Unexpected registration error'
+        },
+        status: 'FAILURE'
+      });
 
       return res.status(500).json({
         error: 'Unable to register user.',
@@ -108,13 +135,27 @@ router.post(
 
       // Use the same response for unknown emails and incorrect passwords.
       if (!user || !(await bcrypt.compare(password, user.password))) {
+        await logAudit({
+          userId: user?._id || null,
+          userEmail: email,
+          action: 'USER_LOGIN_FAILED',
+          ipAddress: req.ip,
+          details: {
+            reason: 'Invalid credentials'
+          },
+          status: 'FAILURE'
+        });
+
         return res.status(401).json({
           error: 'Invalid email or password.',
         });
       }
 
       if (!process.env.JWT_SECRET) {
-        console.error('JWT_SECRET is not configured.');
+        logger.error('JWT_CONFIGURATION_ERROR', {
+          event: 'JWT_CONFIGURATION_ERROR',
+          reason: 'JWT_SECRET is not configured'
+        });
 
         return res.status(500).json({
           error: 'Authentication is temporarily unavailable.',
@@ -130,6 +171,17 @@ router.post(
         { expiresIn: '1h' }
       );
 
+      await logAudit({
+        userId: user._id,
+        userEmail: user.email,
+        action: 'USER_LOGIN_SUCCESS',
+        ipAddress: req.ip,
+        details: {
+          role: user.role
+        },
+        status: 'SUCCESS'
+      });
+
       return res.status(200).json({
         message: 'Login successful!',
         token,
@@ -140,7 +192,22 @@ router.post(
         },
       });
     } catch (error) {
-      console.error('Login failed:', error.message);
+      logger.error('LOGIN_ERROR', {
+        event: 'LOGIN_ERROR',
+        ipAddress: req.ip,
+        error: error.message,
+        stack: error.stack
+      });
+
+      await logAudit({
+        userEmail: req.body.email,
+        action: 'USER_LOGIN_ERROR',
+        ipAddress: req.ip,
+        details: {
+          reason: 'Unexpected authentication error'
+        },
+        status: 'FAILURE'
+      });
 
       return res.status(500).json({
         error: 'Unable to log in.',
