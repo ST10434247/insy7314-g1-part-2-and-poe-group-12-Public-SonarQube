@@ -10,12 +10,14 @@
   ],
   "parserOptions": {
     "ecmaVersion": "latest",
-    "sourceType": "module"
+    "sourceType": "script"
   },
   "rules": {
-    "no-unused-vars": "error",
-    "no-console": ["warn", { "allow": ["warn", "error"] }],
-    "eqeqeq": "error",
-    "curly": "error"
+      "no-unused-vars": ["error", {
+        "argsIgnorePattern": "^_"
+      }],
+      "no-console": ["warn", { "allow": ["warn", "error"] }],
+      "eqeqeq": "error",
+      "curly": "error"
   }
 }

@@ -124,7 +124,7 @@ app.use((req, res) => {
 
 // Handle unexpected errors after all routes and other middleware.
 // Internal details are logged on the server, not returned to clients.
-app.use((err, req, res, next) => {
+app.use((err, req, res, _next) => {
   logger.error('SYSTEM_ERROR', {
     event: 'SYSTEM_ERROR',
     method: req.method,

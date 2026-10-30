@@ -2,12 +2,6 @@
 // Imports Express so this file can define a separate router for gig-related API endpoints.
 const express = require('express');
 
-// Mongoose is used to validate MongoDB document IDs before querying the database.
-const mongoose = require('mongoose');
-
-// express-validator provides validation and sanitisation for incoming request data.
-const { body, param, query, validationResult } = require('express-validator');
-
 // Imports the Mongoose model that represents gig listings in MongoDB.
 const Gig = require('../models/Gig');
 
@@ -16,6 +10,9 @@ const {
   authenticateToken,
   authorizeRoles,
 } = require('../middleware/auth');
+
+// express-validator provides validation and sanitisation for incoming request data.
+const { body, param, query } = require('express-validator');
 
 // Imports the shared middleware that returns validation errors to the client.
 const handleValidationErrors = require('../middleware/validate');
