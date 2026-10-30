@@ -9,7 +9,7 @@
     "dev:full": "concurrently \"npm run dev\" \"npm start --prefix frontend\"",
     "lint:backend": "eslint backend/**/*.js",
     "lint": "npm run lint:backend",
-    "test": "newman run \"tests/Postman/HustleHub Part 2 Secure Stack.postman_collection.json\" --insecure --reporters cli"
+    "test": "newman run \"tests/Postman/HustleHub - Part 2 Security.postman_collection.json\" --insecure --reporters cli"
   },
   "keywords": [],
   "author": "",
