@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 
+const logger = require('../config/logger');
 const Booking = require('../models/Booking');
 const Gig = require('../models/Gig');
 const { authenticateToken, authorizeRoles } = require('../middleware/auth');
@@ -91,12 +92,27 @@ router.post(
                 requirements: requirements.trim()
             });
 
+            logger.info('BOOKING_CREATED', {
+                event: 'BOOKING_CREATED',
+                bookingId: booking._id.toString(),
+                gigId: gig._id.toString(),
+                clientId: req.user.id,
+                freelancerId: gig.freelancer.toString(),
+                price: gig.price
+            });
+
             return res.status(201).json({
                 message: 'Booking created successfully.',
                 booking
             });
         } catch (error) {
-            console.error('Create booking error:', error);
+            logger.error('BOOKING_CREATE_FAILED', {
+                event: 'BOOKING_CREATE_FAILED',
+                userId: req.user?.id,
+                gigId: req.body?.gigId,
+                error: error.message,
+                stack: error.stack
+            });
 
             return res.status(500).json({
                 error: 'Unable to create booking.'
@@ -131,7 +147,12 @@ router.get(
 
             return res.status(200).json({ bookings });
         } catch (error) {
-            console.error('Get bookings error:', error);
+            logger.error('BOOKINGS_RETRIEVAL_FAILED', {
+                event: 'BOOKINGS_RETRIEVAL_FAILED',
+                userId: req.user?.id,
+                error: error.message,
+                stack: error.stack
+            });
 
             return res.status(500).json({
                 error: 'Unable to retrieve bookings.'
@@ -184,7 +205,13 @@ router.get(
 
             return res.status(200).json({ booking });
         } catch (error) {
-            console.error('Get booking error:', error);
+            logger.error('BOOKING_RETRIEVAL_FAILED', {
+                event: 'BOOKING_RETRIEVAL_FAILED',
+                bookingId: req.params.id,
+                userId: req.user?.id,
+                error: error.message,
+                stack: error.stack
+            });
 
             return res.status(500).json({
                 error: 'Unable to retrieve booking.'
@@ -311,15 +338,32 @@ router.patch(
             }
 
             // Save the approved status transition.
+            const previousStatus = booking.status;
+
             booking.status = status;
             await booking.save();
+
+            logger.info('BOOKING_STATUS_UPDATED', {
+                event: 'BOOKING_STATUS_UPDATED',
+                bookingId: booking._id.toString(),
+                userId: req.user.id,
+                previousStatus,
+                newStatus: status
+            });
 
             return res.status(200).json({
                 message: 'Booking status updated successfully.',
                 booking
             });
         } catch (error) {
-            console.error('Update booking status error:', error);
+            logger.error('BOOKING_STATUS_UPDATE_FAILED', {
+                event: 'BOOKING_STATUS_UPDATE_FAILED',
+                bookingId: req.params.id,
+                userId: req.user?.id,
+                requestedStatus: req.body?.status,
+                error: error.message,
+                stack: error.stack
+            });
 
             return res.status(500).json({
                 error: 'Unable to update booking status.'
@@ -382,12 +426,24 @@ router.post(
 
             await booking.save();
 
+            logger.info('BOOKING_REVIEW_REQUESTED', {
+                event: 'BOOKING_REVIEW_REQUESTED',
+                bookingId: booking._id.toString(),
+                freelancerId: req.user.id
+            });
+
             return res.status(200).json({
                 message: 'Admin review requested successfully.',
                 booking
             });
         } catch (error) {
-            console.error('Request admin review error:', error);
+            logger.error('BOOKING_REVIEW_REQUEST_FAILED', {
+                event: 'BOOKING_REVIEW_REQUEST_FAILED',
+                bookingId: req.params.id,
+                userId: req.user?.id,
+                error: error.message,
+                stack: error.stack
+            });
 
             return res.status(500).json({
                 error: 'Unable to request admin review.'

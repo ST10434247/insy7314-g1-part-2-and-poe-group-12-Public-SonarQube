@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 
+const logger = require('../config/logger');
 const Transaction = require('../models/Transaction');
 const Booking = require('../models/Booking');
 const { authenticateToken, authorizeRoles } = require('../middleware/auth');
@@ -64,6 +65,15 @@ router.post(
                 amount: booking.price
             });
 
+            logger.info('TRANSACTION_CREATED', {
+                event: 'TRANSACTION_CREATED',
+                transactionId: transaction._id.toString(),
+                bookingId: booking._id.toString(),
+                clientId: booking.client.toString(),
+                freelancerId: booking.freelancer.toString(),
+                amount: booking.price
+            });
+
             return res.status(201).json({
                 message: 'Transaction created successfully.',
                 transaction
@@ -76,7 +86,13 @@ router.post(
                 });
             }
 
-            console.error('Create transaction error:', error);
+            logger.error('TRANSACTION_CREATE_FAILED', {
+                event: 'TRANSACTION_CREATE_FAILED',
+                userId: req.user?.id,
+                bookingId: req.body?.bookingId,
+                error: error.message,
+                stack: error.stack
+            });
 
             return res.status(500).json({
                 error: 'Unable to create transaction.'
@@ -110,7 +126,12 @@ router.get(
 
             return res.status(200).json({ transactions });
         } catch (error) {
-            console.error('Get transactions error:', error);
+            logger.error('TRANSACTIONS_RETRIEVAL_FAILED', {
+                event: 'TRANSACTIONS_RETRIEVAL_FAILED',
+                userId: req.user?.id,
+                error: error.message,
+                stack: error.stack
+            });
 
             return res.status(500).json({
                 error: 'Unable to retrieve transactions.'
@@ -163,7 +184,12 @@ router.get(
                 transactions
             });
         } catch (error) {
-            console.error('Get freelancer income error:', error);
+            logger.error('INCOME_RETRIEVAL_FAILED', {
+                event: 'INCOME_RETRIEVAL_FAILED',
+                freelancerId: req.user?.id,
+                error: error.message,
+                stack: error.stack
+            });
 
             return res.status(500).json({
                 error: 'Unable to retrieve income.'
@@ -215,7 +241,13 @@ router.get(
 
             return res.status(200).json({ transaction });
         } catch (error) {
-            console.error('Get transaction error:', error);
+            logger.error('TRANSACTION_RETRIEVAL_FAILED', {
+                event: 'TRANSACTION_RETRIEVAL_FAILED',
+                transactionId: req.params.id,
+                userId: req.user?.id,
+                error: error.message,
+                stack: error.stack
+            });
 
             return res.status(500).json({
                 error: 'Unable to retrieve transaction.'
@@ -289,6 +321,8 @@ router.patch(
                 });
             }
 
+            const previousStatus = transaction.status;
+
             transaction.status = status;
 
             if (status === 'paid') {
@@ -299,12 +333,30 @@ router.patch(
 
             await transaction.save();
 
+            logger.info(status === 'paid' ? 'TRANSACTION_PAID' : 'TRANSACTION_FAILED', {
+                event: status === 'paid' ? 'TRANSACTION_PAID' : 'TRANSACTION_FAILED',
+                transactionId: transaction._id.toString(),
+                bookingId: booking._id.toString(),
+                clientId: req.user.id,
+                freelancerId: transaction.freelancer.toString(),
+                amount: transaction.amount,
+                previousStatus,
+                newStatus: status
+            });
+
             return res.status(200).json({
                 message: `Transaction marked as ${status}.`,
                 transaction
             });
         } catch (error) {
-            console.error('Update transaction error:', error);
+            logger.error('TRANSACTION_UPDATE_FAILED', {
+                event: 'TRANSACTION_UPDATE_FAILED',
+                transactionId: req.params.id,
+                userId: req.user?.id,
+                requestedStatus: req.body?.status,
+                error: error.message,
+                stack: error.stack
+            });
 
             return res.status(500).json({
                 error: 'Unable to update transaction.'
