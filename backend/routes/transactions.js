@@ -152,12 +152,50 @@ router.get(
     authorizeRoles('freelancer'),
     async (req, res) => {
         try {
+            // Determine the current South African tax year (1 March to 28 February).
+            // South Africa uses UTC+2 throughout the year.
+            const southAfricanTime = new Date(Date.now() + (2 * 60 * 60 * 1000));
+
+            const taxYearStartYear = southAfricanTime.getUTCMonth() >= 2
+                ? southAfricanTime.getUTCFullYear()
+                : southAfricanTime.getUTCFullYear() - 1;
+
+            // Convert South African midnight boundaries to UTC for MongoDB.
+            const taxYearStart = new Date(
+                Date.UTC(taxYearStartYear, 2, 1) - (2 * 60 * 60 * 1000)
+            );
+
+            const taxYearEnd = new Date(
+                Date.UTC(taxYearStartYear + 1, 2, 1) - (2 * 60 * 60 * 1000)
+            );
+            
             // Aggregate paid transactions for this freelancer.
             const [summary] = await Transaction.aggregate([
                 {
                     $match: {
                         freelancer: new mongoose.Types.ObjectId(req.user.id),
                         status: 'paid'
+                    }
+                },
+                {
+                    $group: {
+                        _id: null,
+                        totalIncome: { $sum: '$amount' },
+                        paidTransactions: { $sum: 1 }
+                    }
+                }
+            ]);
+
+             // Calculate paid income within the current SARS tax year.
+            const [taxYearSummary] = await Transaction.aggregate([
+                {
+                    $match: {
+                        freelancer: new mongoose.Types.ObjectId(req.user.id),
+                        status: 'paid',
+                        paidAt: {
+                            $gte: taxYearStart,
+                            $lt: taxYearEnd
+                        }
                     }
                 },
                 {
@@ -181,7 +219,10 @@ router.get(
             return res.status(200).json({
                 totalIncome: summary?.totalIncome || 0,
                 paidTransactions: summary?.paidTransactions || 0,
-                transactions
+                transactions,
+                taxYearIncome: taxYearSummary?.totalIncome || 0,
+                taxYearPaidTransactions: taxYearSummary?.paidTransactions || 0,
+                taxYear: `${taxYearStartYear}/${taxYearStartYear + 1}`,
             });
         } catch (error) {
             logger.error('INCOME_RETRIEVAL_FAILED', {
