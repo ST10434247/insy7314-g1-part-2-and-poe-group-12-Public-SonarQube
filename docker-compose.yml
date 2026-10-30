@@ -1,0 +1,20 @@
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: hustlehub-backend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      SSL_KEY_PATH: /app/certs/key.pem
+      SSL_CERT_PATH: /app/certs/cert.pem
+    volumes:
+      - ./backend/certs:/app/certs:ro
+      - ./logs:/app/logs
