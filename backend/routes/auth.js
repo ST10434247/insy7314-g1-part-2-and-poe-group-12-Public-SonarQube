@@ -111,6 +111,7 @@ router.post(
 // (express-validator, 2026)
 
 // Authenticate against the stored user record and issue a JWT.
+
 router.post(
   '/login',
   [
@@ -130,13 +131,18 @@ router.post(
     try {
       const { email, password } = req.body;
 
-      // Passwords are excluded from normal queries, so explicitly include it.
-      const user = await User.findOne({ email }).select('+password');
+      // Passwords and lockout fields are excluded from normal queries, so explicitly include them.
+      const user = await User.findOne({ email }).select(
+        '+password +failedLoginAttempts +lockUntil'
+      );
 
-      // Use the same response for unknown emails and incorrect passwords.
-      if (!user || !(await bcrypt.compare(password, user.password))) {
+      // Use the same response for unknown emails, incorrect passwords and locked accounts.
+      const invalidCredentials = () => res.status(401).json({
+        error: 'Invalid email or password.',
+      });
+
+      if (!user) {
         await logAudit({
-          userId: user?._id || null,
           userEmail: email,
           action: 'USER_LOGIN_FAILED',
           ipAddress: req.ip,
@@ -146,10 +152,73 @@ router.post(
           status: 'FAILURE'
         });
 
-        return res.status(401).json({
-          error: 'Invalid email or password.',
-        });
+        return invalidCredentials();
       }
+
+      // Reject login attempts while the account lockout is active.
+      if (user.lockUntil && user.lockUntil > Date.now()) {
+        await logAudit({
+          userId: user._id,
+          userEmail: user.email,
+          action: 'USER_LOGIN_BLOCKED',
+          ipAddress: req.ip,
+          details: {
+            reason: 'Account temporarily locked'
+          },
+          status: 'WARNING'
+        });
+
+        return invalidCredentials();
+      }
+
+      // Reset expired lockouts before processing another login attempt.
+      if (user.lockUntil && user.lockUntil <= Date.now()) {
+        user.failedLoginAttempts = 0;
+        user.lockUntil = null;
+      }
+
+      // Compare the submitted password with the stored password hash.
+      if (!(await bcrypt.compare(password, user.password))) {
+        user.failedLoginAttempts += 1;
+
+        // Lock the account after five consecutive failed login attempts.
+        if (user.failedLoginAttempts >= 5) {
+          user.lockUntil = new Date(Date.now() + 15 * 60 * 1000);
+
+          await logAudit({
+            userId: user._id,
+            userEmail: user.email,
+            action: 'USER_ACCOUNT_LOCKED',
+            ipAddress: req.ip,
+            details: {
+              failedAttempts: user.failedLoginAttempts,
+              lockDurationMinutes: 15
+            },
+            status: 'WARNING'
+          });
+        }
+
+        await user.save();
+
+        await logAudit({
+          userId: user._id,
+          userEmail: user.email,
+          action: 'USER_LOGIN_FAILED',
+          ipAddress: req.ip,
+          details: {
+            reason: 'Invalid credentials',
+            failedAttempts: user.failedLoginAttempts
+          },
+          status: 'FAILURE'
+        });
+
+        return invalidCredentials();
+      }
+
+      // Reset failed login attempts after successful authentication.
+      user.failedLoginAttempts = 0;
+      user.lockUntil = null;
+      await user.save();
 
       if (!process.env.JWT_SECRET) {
         logger.error('JWT_CONFIGURATION_ERROR', {
@@ -215,6 +284,7 @@ router.post(
     }
   }
 );
+
 
 // Protected endpoint used to demonstrate that a valid JWT is required
 // before authenticated user information can be accessed.
