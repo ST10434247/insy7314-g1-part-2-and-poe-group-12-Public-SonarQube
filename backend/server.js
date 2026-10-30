@@ -148,10 +148,13 @@ const startServer = async () => {
 
     // HTTPS configuration loads the certificate and private key from environment-defined
     // paths. These files must exist before the server can start.
+    // The paths are controlled by server configuration, not by incoming requests.
     const sslOptions = {
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
       key: fs.readFileSync(
         path.resolve(__dirname, process.env.SSL_KEY_PATH || '../certs/key.pem')
       ),
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
       cert: fs.readFileSync(
         path.resolve(__dirname, process.env.SSL_CERT_PATH || '../certs/cert.pem')
       )

@@ -55,7 +55,9 @@ const createAdmin = async () => {
       password: hashedPassword,
       role: 'admin'
     });
-
+    
+    // CLI feedback for the administrator creation script.
+    // eslint-disable-next-line no-console
     console.log('Admin account created successfully.');
   } catch (error) {
     console.error('Admin creation failed:', error.message);

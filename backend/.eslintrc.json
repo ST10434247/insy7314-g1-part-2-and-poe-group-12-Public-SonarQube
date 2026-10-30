@@ -1,3 +1,4 @@
+
 {
   "env": {
     "node": true,
@@ -8,16 +9,24 @@
   "extends": [
     "eslint:recommended"
   ],
+  "plugins": [
+    "security"
+  ],
   "parserOptions": {
     "ecmaVersion": "latest",
     "sourceType": "script"
   },
   "rules": {
-      "no-unused-vars": ["error", {
-        "argsIgnorePattern": "^_"
-      }],
-      "no-console": ["warn", { "allow": ["warn", "error"] }],
-      "eqeqeq": "error",
-      "curly": "error"
+    "no-unused-vars": ["error", {
+      "argsIgnorePattern": "^_"
+    }],
+    "no-console": ["warn", {
+      "allow": ["warn", "error"]
+    }],
+    "eqeqeq": "error",
+    "curly": "error",
+    "security/detect-object-injection": "warn",
+    "security/detect-non-literal-fs-filename": "warn",
+    "security/detect-unsafe-regex": "error"
   }
 }

@@ -44,7 +44,7 @@ jobs:
       - name: Install backend dependencies
         run: npm ci
 
-      - name: Run backend lint
+      - name: Run backend static analysis
         run: npm run lint:backend
 
       - name: Start backend server
@@ -107,7 +107,7 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci --prefix frontend
 
-      - name: Run frontend lint
+      - name: Run frontend static analysis
         run: npm run lint --prefix frontend
 
       - name: Run frontend tests

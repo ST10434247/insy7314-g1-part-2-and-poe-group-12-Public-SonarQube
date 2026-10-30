@@ -313,13 +313,17 @@ router.put(
         'status',
       ];
 
-      // Build a new object containing only accepted fields.
-      // This prevents clients from assigning arbitrary properties.
+      // The field names are restricted to the hardcoded allowlist above.
+      // This dynamic assignment cannot be controlled with arbitrary client keys.
+      // eslint-disable-next-line security/detect-object-injection
       const updates = {};
 
       for (const field of allowedFields) {
-        // Only include fields actually supplied by the caller.
+        // The field is sourced exclusively from the hardcoded allowlist.
+        // eslint-disable-next-line security/detect-object-injection
         if (req.body[field] !== undefined) {
+          // The field is sourced exclusively from the hardcoded allowlist.
+          // eslint-disable-next-line security/detect-object-injection
           updates[field] = req.body[field];
         }
       }
