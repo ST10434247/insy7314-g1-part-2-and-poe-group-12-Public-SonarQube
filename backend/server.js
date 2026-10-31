@@ -26,10 +26,6 @@ const app = express();
 // This allows express-rate-limit to process forwarded headers in development.
 app.set('trust proxy', 'loopback');
 
-// Use Google DNS to resolve MongoDB Atlas SRV records.
-const dns = require('node:dns');
-dns.setServers(['8.8.8.8']);
-
 // (Helmet, 2026)  security header CSP Content Security Policy
 // ()
 

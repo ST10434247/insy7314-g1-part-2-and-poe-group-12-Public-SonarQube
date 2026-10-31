@@ -13,7 +13,7 @@ COPY frontend/ ./
 RUN npm run build
 
 # Production stage: serve the build using Nginx.
-FROM nginx:1.27-alpine
+FROM nginxinc/nginx-unprivileged:1.27-alpine
 
 # Copy the production build into Nginx's web directory.
 COPY --from=build /app/build /usr/share/nginx/html
@@ -21,6 +21,6 @@ COPY --from=build /app/build /usr/share/nginx/html
 # Copy the custom Nginx configuration.
 COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
 
-EXPOSE 80
+EXPOSE 8080
 
 CMD ["nginx", "-g", "daemon off;"]

@@ -11,8 +11,11 @@ RUN npm ci --omit=dev --ignore-scripts
 # Copy backend application source.
 COPY backend/ ./backend/
 
-# Create the directory used for application logs.
-RUN mkdir -p /app/logs
+# Create the application log directory and assign ownership.
+RUN mkdir -p /app/logs && chown -R node:node /app
+
+# Run the application as the non-root Node user.
+USER node
 
 # Configure the application environment.
 ENV NODE_ENV=production
