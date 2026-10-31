@@ -1,6 +1,7 @@
 
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { body } = require('express-validator');
@@ -140,8 +141,13 @@ router.post(
         });
       }
 
+      // Sanitize the email filter before querying MongoDB.
+      const safeEmailFilter = mongoose.sanitizeFilter({
+        email: email.trim()
+      });
+
       // Passwords and lockout fields are excluded from normal queries, so explicitly include them.
-      const user = await User.findOne({ email }).select(
+      const user = await User.findOne(safeEmailFilter).select(
         '+password +failedLoginAttempts +lockUntil'
       );
 

@@ -1,3 +1,4 @@
+
 const express = require('express');
 const mongoose = require('mongoose');
 
@@ -19,6 +20,18 @@ const ALLOWED_STATUSES = [
     'disputed'
 ];
 
+// Validate authenticated user IDs before using them in MongoDB queries.
+const getAuthenticatedUserId = (req) => {
+    if (
+        typeof req.user?.id !== 'string' ||
+        !mongoose.isObjectIdOrHexString(req.user.id)
+    ) {
+        return null;
+    }
+
+    return new mongoose.Types.ObjectId(req.user.id);
+};
+
 /*
  * POST /api/bookings
  *
@@ -35,16 +48,24 @@ router.post(
         try {
             const { gigId, requirements = '' } = req.body;
 
-        if (
-            typeof gigId !== 'string' ||
-            !mongoose.isObjectIdOrHexString(gigId)
-        ) {
-            return res.status(400).json({
-                error: 'A valid gigId is required.'
-            });
-        }
+            // Validate the gig ID before querying MongoDB.
+            if (
+                typeof gigId !== 'string' ||
+                !mongoose.isObjectIdOrHexString(gigId)
+            ) {
+                return res.status(400).json({
+                    error: 'A valid gigId is required.'
+                });
+            }
 
-        const gigObjectId = new mongoose.Types.ObjectId(gigId);
+            const gigObjectId = new mongoose.Types.ObjectId(gigId);
+            const clientId = getAuthenticatedUserId(req);
+
+            if (!clientId) {
+                return res.status(401).json({
+                    error: 'Invalid authenticated user.'
+                });
+            }
 
             // Requirements are optional, but must be a string of reasonable length.
             if (
@@ -69,7 +90,7 @@ router.post(
             }
 
             // A freelancer cannot book their own gig using a client account.
-            if (gig.freelancer.toString() === req.user.id) {
+            if (gig.freelancer.toString() === clientId.toString()) {
                 return res.status(403).json({
                     error: 'You cannot book your own gig.'
                 });
@@ -78,7 +99,7 @@ router.post(
             // Prevent duplicate pending or accepted bookings for the same gig.
             const existingBooking = await Booking.findOne({
                 gig: gig._id,
-                client: req.user.id,
+                client: clientId,
                 status: { $in: ['pending', 'accepted'] }
             });
 
@@ -87,10 +108,11 @@ router.post(
                     error: 'You already have an active booking for this gig.'
                 });
             }
+
             // Create a booking using trusted values from the gig and token.
             const booking = await Booking.create({
                 gig: gig._id,
-                client: req.user.id,
+                client: clientId,
                 freelancer: gig.freelancer,
                 price: gig.price,
                 requirements: requirements.trim()
@@ -100,7 +122,7 @@ router.post(
                 event: 'BOOKING_CREATED',
                 bookingId: booking._id.toString(),
                 gigId: gig._id.toString(),
-                clientId: req.user.id,
+                clientId: clientId.toString(),
                 freelancerId: gig.freelancer.toString(),
                 price: gig.price
             });
@@ -138,10 +160,18 @@ router.get(
     authorizeRoles('client', 'freelancer'),
     async (req, res) => {
         try {
+            const userId = getAuthenticatedUserId(req);
+
+            if (!userId) {
+                return res.status(401).json({
+                    error: 'Invalid authenticated user.'
+                });
+            }
+
             const userFilter =
                 req.user.role === 'client'
-                    ? { client: req.user.id }
-                    : { freelancer: req.user.id };
+                    ? { client: userId }
+                    : { freelancer: userId };
 
             const bookings = await Booking.find(userFilter)
                 .populate('gig', 'title category')
@@ -179,13 +209,23 @@ router.get(
         try {
             const { id } = req.params;
 
-            if (!mongoose.isValidObjectId(id)) {
+            if (!mongoose.isObjectIdOrHexString(id)) {
                 return res.status(400).json({
                     error: 'Invalid booking ID.'
                 });
             }
 
-            const booking = await Booking.findById(id)
+            const userId = getAuthenticatedUserId(req);
+
+            if (!userId) {
+                return res.status(401).json({
+                    error: 'Invalid authenticated user.'
+                });
+            }
+
+            const bookingId = new mongoose.Types.ObjectId(id);
+
+            const booking = await Booking.findOne({ _id: bookingId })
                 .populate('gig', 'title category')
                 .populate('client', 'name email')
                 .populate('freelancer', 'name email');
@@ -197,9 +237,9 @@ router.get(
             }
 
             // Check whether the authenticated user is one of the participants.
-            const isClient = booking.client._id.toString() === req.user.id;
+            const isClient = booking.client._id.toString() === userId.toString();
             const isFreelancer =
-                booking.freelancer._id.toString() === req.user.id;
+                booking.freelancer._id.toString() === userId.toString();
 
             if (!isClient && !isFreelancer) {
                 return res.status(404).json({
@@ -224,7 +264,6 @@ router.get(
     }
 );
 
-
 /*
  * PATCH /api/bookings/:id/status
  *
@@ -246,20 +285,32 @@ router.patch(
             const { status } = req.body;
 
             // Validate the booking ID before querying MongoDB.
-            if (!mongoose.isValidObjectId(id)) {
+            if (!mongoose.isObjectIdOrHexString(id)) {
                 return res.status(400).json({
                     error: 'Invalid booking ID.'
                 });
             }
 
+            const userId = getAuthenticatedUserId(req);
+
+            if (!userId) {
+                return res.status(401).json({
+                    error: 'Invalid authenticated user.'
+                });
+            }
+
             // Reject missing or unsupported status values.
-            if (!ALLOWED_STATUSES.includes(status)) {
+            if (
+                typeof status !== 'string' ||
+                !ALLOWED_STATUSES.includes(status)
+            ) {
                 return res.status(400).json({
                     error: 'A valid status is required.'
                 });
             }
 
-            const booking = await Booking.findById(id);
+            const bookingId = new mongoose.Types.ObjectId(id);
+            const booking = await Booking.findOne({ _id: bookingId });
 
             if (!booking) {
                 return res.status(404).json({
@@ -268,9 +319,9 @@ router.patch(
             }
 
             // Identify the authenticated user's relationship to the booking.
-            const isClient = booking.client.toString() === req.user.id;
+            const isClient = booking.client.toString() === userId.toString();
             const isFreelancer =
-                booking.freelancer.toString() === req.user.id;
+                booking.freelancer.toString() === userId.toString();
 
             // Only the client or freelancer involved may change the booking.
             if (!isClient && !isFreelancer) {
@@ -350,7 +401,7 @@ router.patch(
             logger.info('BOOKING_STATUS_UPDATED', {
                 event: 'BOOKING_STATUS_UPDATED',
                 bookingId: booking._id.toString(),
-                userId: req.user.id,
+                userId: userId.toString(),
                 previousStatus,
                 newStatus: status
             });
@@ -390,13 +441,22 @@ router.post(
         try {
             const { id } = req.params;
 
-            if (!mongoose.isValidObjectId(id)) {
+            if (!mongoose.isObjectIdOrHexString(id)) {
                 return res.status(400).json({
                     error: 'Invalid booking ID.'
                 });
             }
 
-            const booking = await Booking.findById(id);
+            const userId = getAuthenticatedUserId(req);
+
+            if (!userId) {
+                return res.status(401).json({
+                    error: 'Invalid authenticated user.'
+                });
+            }
+
+            const bookingId = new mongoose.Types.ObjectId(id);
+            const booking = await Booking.findOne({ _id: bookingId });
 
             if (!booking) {
                 return res.status(404).json({
@@ -405,7 +465,7 @@ router.post(
             }
 
             // Only the freelancer involved in the booking can request review.
-            if (booking.freelancer.toString() !== req.user.id) {
+            if (booking.freelancer.toString() !== userId.toString()) {
                 return res.status(404).json({
                     error: 'Booking not found.'
                 });
@@ -433,7 +493,7 @@ router.post(
             logger.info('BOOKING_REVIEW_REQUESTED', {
                 event: 'BOOKING_REVIEW_REQUESTED',
                 bookingId: booking._id.toString(),
-                freelancerId: req.user.id
+                freelancerId: userId.toString()
             });
 
             return res.status(200).json({

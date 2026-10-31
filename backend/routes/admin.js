@@ -100,20 +100,27 @@ router.get(
                     });
                 }
 
-                filter.status = req.query.status;
+                const validatedStatus = validStatuses.find(
+                    (allowedStatus) => allowedStatus === req.query.status
+                );
+
+                filter.status = validatedStatus;
             }
+
+            // Sanitize the filter before passing it to MongoDB.
+            const safeFilter = mongoose.sanitizeFilter(filter);
 
             const skip = (page - 1) * limit;
 
             const [auditLogs, total] = await Promise.all([
-                AuditLog.find(filter)
+                AuditLog.find(safeFilter)
                     .populate('userId', 'email role')
                     .sort({ createdAt: -1 })
                     .skip(skip)
                     .limit(limit)
                     .lean(),
 
-                AuditLog.countDocuments(filter)
+                AuditLog.countDocuments(safeFilter)
             ]);
 
             return res.status(200).json({
@@ -166,7 +173,10 @@ router.patch(
             }
 
             // Only the three defined resolution outcomes are permitted.
-            if (!RESOLUTION_STATUSES.includes(status)) {
+            if (
+                typeof status !== 'string' ||
+                !RESOLUTION_STATUSES.includes(status)
+            ) {
                 return res.status(400).json({
                     error: 'A valid resolution status is required.'
                 });

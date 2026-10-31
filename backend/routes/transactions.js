@@ -1,3 +1,4 @@
+
 const express = require('express');
 const mongoose = require('mongoose');
 
@@ -179,7 +180,7 @@ router.get(
             const taxYearEnd = new Date(
                 Date.UTC(taxYearStartYear + 1, 2, 1) - (2 * 60 * 60 * 1000)
             );
-            
+
             // Aggregate paid transactions for this freelancer.
             const [summary] = await Transaction.aggregate([
                 {
@@ -233,7 +234,7 @@ router.get(
                 transactions,
                 taxYearIncome: taxYearSummary?.totalIncome || 0,
                 taxYearPaidTransactions: taxYearSummary?.paidTransactions || 0,
-                taxYear: `${taxYearStartYear}/${taxYearStartYear + 1}`,
+                taxYear: `${taxYearStartYear}/${taxYearStartYear + 1}`
             });
         } catch (error) {
             logger.error('INCOME_RETRIEVAL_FAILED', {
@@ -263,13 +264,21 @@ router.get(
         try {
             const { id } = req.params;
 
-            if (!mongoose.isValidObjectId(id)) {
+            // Validate the transaction ID before querying MongoDB.
+            if (
+                typeof id !== 'string' ||
+                !mongoose.isObjectIdOrHexString(id)
+            ) {
                 return res.status(400).json({
                     error: 'Invalid transaction ID.'
                 });
             }
 
-            const transaction = await Transaction.findById(id)
+            const transactionObjectId = new mongoose.Types.ObjectId(id);
+
+            const transaction = await Transaction.findOne({
+                _id: transactionObjectId
+            })
                 .populate('booking', 'status')
                 .populate('client', 'name email')
                 .populate('freelancer', 'name email');
@@ -364,7 +373,7 @@ router.patch(
                     error: 'Only pending transactions can be updated.'
                 });
             }
-            
+
             // Retrieve the associated booking and verify client ownership.
             const booking = await Booking.findOne({
                 _id: transaction.booking,
