@@ -1,5 +1,15 @@
 # HustleHub
 
+## External Service Repository
+
+Due to repository integration permissions, SonarQube Cloud is connected
+to the group's public fork:
+
+[HustleHub – Part 3 Fork]((https://github.com/EMGPPT/insy7314-g1-part-2-and-poe-group-12-fork))
+
+The fork contains the project source code and commits used for
+static code analysis.
+
 HustleHub is a secure gig marketplace built with a **React frontend** and an **Express/Node.js/MongoDB backend**.
 
 Clients can browse available gigs, book freelancers and make simulated payments. Freelancers can publish and manage gigs, manage bookings and track income. Administrators can review and resolve eligible disputes.
