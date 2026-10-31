@@ -17,7 +17,7 @@ export default function CardInput({ onValidCard }) {
     let shouldDouble = false;
 
     for (let i = sanitized.length - 1; i >= 0; i--) {
-      let digit = parseInt(sanitized.charAt(i), 10);
+      let digit = Number.parseInt(sanitized.charAt(i), 10);
 
       if (shouldDouble) {
         digit *= 2;

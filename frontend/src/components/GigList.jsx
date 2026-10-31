@@ -38,7 +38,8 @@ useEffect(() => {
     }
   };
 
-  loadGigs();
+  // The function handles its own errors and loading state.
+  void loadGigs();
 }, []);
 
   // Add the newly published gig to the current list.

@@ -106,7 +106,8 @@ export default function TaxDashboard() {
       }
     };
 
-    fetchIncome();
+    // The function handles its own errors and loading state.
+    void fetchIncome();
   }, [token]);
 
   // Calculate the proportion of income represented by estimated tax.
