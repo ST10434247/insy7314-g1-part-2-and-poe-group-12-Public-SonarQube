@@ -5,11 +5,9 @@ on:
   push:
     branches:
       - main
-      - part3-integration
   pull_request:
     branches:
       - main
-      - part3-integration
 
 jobs:
   backend:
