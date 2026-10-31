@@ -1,5 +1,5 @@
-
 const mongoose = require('mongoose');
+const logger = require('./logger');
 
 // Establishes a connection to MongoDB using the URI stored in the
 // environment configuration. The URI is never logged because it may
@@ -15,7 +15,11 @@ const connectDB = async () => {
     serverSelectionTimeoutMS: 5000,
   });
 
-  console.log('MongoDB connected successfully.');
+  logger.info('MONGODB_CONNECTED', {
+    event: 'MONGODB_CONNECTED',
+    database: mongoose.connection.name,
+    host: mongoose.connection.host
+  });
 };
 
 module.exports = connectDB;
