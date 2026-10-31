@@ -7,22 +7,30 @@ export const AuthContext = createContext();
 const INACTIVITY_TIMEOUT_MS = 10 * 60 * 1000;
 
 export const AuthProvider = ({ children }) => {
-  const [token, setToken] = useState(localStorage.getItem('token') || null);
-  const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')) || null);
+  // Keep authentication data in memory rather than browser storage.
+  const [token, setToken] = useState(null);
+  const [user, setUser] = useState(null);
   const timerRef = useRef(null);
 
   const login = (userData, jwtToken) => {
+    // Only accept the expected data types from the authentication response.
+    if (
+      !userData ||
+      typeof userData !== 'object' ||
+      Array.isArray(userData) ||
+      typeof jwtToken !== 'string' ||
+      jwtToken.trim().length === 0
+    ) {
+      return;
+    }
+
     setUser(userData);
     setToken(jwtToken);
-    localStorage.setItem('user', JSON.stringify(userData));
-    localStorage.setItem('token', jwtToken);
   };
 
   const logout = () => {
     setUser(null);
     setToken(null);
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
 
     // Clear the inactivity timer when the user logs out.
     if (timerRef.current) {

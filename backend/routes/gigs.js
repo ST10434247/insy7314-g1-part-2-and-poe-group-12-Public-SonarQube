@@ -147,7 +147,7 @@ router.get(
       // Inactive gigs remain stored but are excluded from browsing.
       const filter = { status: 'active' };
 
-       // Apply the category filter only when a validated string is supplied.
+      // Apply the category filter only when a validated string is supplied.
       if (typeof req.query.category === 'string') {
         filter.category = req.query.category.trim();
       }
@@ -197,7 +197,7 @@ router.get(
       // Find the requested gig only if it is active.
       // Populate only the freelancer's email for public display.
       const gigId = new mongoose.Types.ObjectId(req.params.id);
-      
+
       const gig = await Gig.findOne({
         _id: gigId,
         status: 'active',
@@ -307,6 +307,16 @@ router.put(
   async (req, res) => {
     try {
       const gigId = new mongoose.Types.ObjectId(req.params.id);
+
+      // Validate the authenticated user's ID before using it in a database query.
+      if (!mongoose.isObjectIdOrHexString(req.user.id)) {
+        return res.status(401).json({
+          error: 'Invalid authenticated user.',
+        });
+      }
+
+      const freelancerId = new mongoose.Types.ObjectId(req.user.id);
+
       // Define an allowlist of fields that a freelancer may update.
       // Fields such as _id, freelancer, createdAt, and __v are excluded.
       const allowedFields = [
@@ -344,7 +354,7 @@ router.put(
       // Including the owner in the query enforces ownership at database level.
       const gig = await Gig.findOne({
         _id: gigId,
-        freelancer: req.user.id,
+        freelancer: freelancerId,
       });
 
       // A missing gig and a gig owned by someone else both return 404.
@@ -400,11 +410,21 @@ router.delete(
   async (req, res) => {
     try {
       const gigId = new mongoose.Types.ObjectId(req.params.id);
+
+      // Validate the authenticated user's ID before using it in a database query.
+      if (!mongoose.isObjectIdOrHexString(req.user.id)) {
+        return res.status(401).json({
+          error: 'Invalid authenticated user.',
+        });
+      }
+
+      const freelancerId = new mongoose.Types.ObjectId(req.user.id);
+
       // Delete only if both the gig ID and authenticated owner match.
       // This prevents one freelancer from deleting another's listing.
       const gig = await Gig.findOneAndDelete({
         _id: gigId,
-        freelancer: req.user.id,
+        freelancer: freelancerId,
       });
 
       // Return 404 if no owned gig matched the query.

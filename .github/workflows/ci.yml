@@ -63,7 +63,7 @@ jobs:
       - name: Wait for backend
         run: |
           for i in {1..30}; do
-            if curl -k -s https://localhost:3000/ > /dev/null; then
+            if curl --cacert certs/cert.pem -s https://localhost:3000/ > /dev/null; then
               echo "Backend is responding."
               exit 0
             fi
