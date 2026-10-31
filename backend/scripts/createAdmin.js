@@ -10,6 +10,7 @@ require('dotenv').config({
 });
 
 const bcrypt = require('bcryptjs');
+const mongoose = require('mongoose');
 const connectDB = require('../config/db');
 const User = require('../models/User');
 
@@ -55,7 +56,7 @@ const createAdmin = async () => {
       password: hashedPassword,
       role: 'admin'
     });
-    
+
     // CLI feedback for the administrator creation script.
     // eslint-disable-next-line no-console
     console.log('Admin account created successfully.');
@@ -63,12 +64,15 @@ const createAdmin = async () => {
     console.error('Admin creation failed:', error.message);
     process.exitCode = 1;
   } finally {
-    const mongoose = require('mongoose');
-
+    // Close the database connection when the script finishes.
     if (mongoose.connection.readyState !== 0) {
-        await mongoose.disconnect();
+      await mongoose.disconnect();
     }
   }
 };
 
-createAdmin();
+// Handle any rejected promise, including errors during database cleanup.
+createAdmin().catch((error) => {
+  console.error('Admin creation failed:', error.message);
+  process.exitCode = 1;
+});

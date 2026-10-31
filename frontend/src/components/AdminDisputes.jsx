@@ -39,7 +39,10 @@ function AdminDisputes() {
 
   useEffect(() => {
     if (token) {
-      fetchDisputes();
+      fetchDisputes().catch((err) => {
+        setError(err.message || 'Unable to retrieve disputes.');
+        setLoading(false);
+      });
     }
   }, [token]);
 

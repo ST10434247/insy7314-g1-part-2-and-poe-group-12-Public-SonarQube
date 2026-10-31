@@ -176,4 +176,13 @@ const startServer = async () => {
   }
 };
 
-startServer();
+// Handle any unexpected rejection from the server startup process.
+startServer().catch((error) => {
+  logger.error('UNHANDLED_SERVER_STARTUP_ERROR', {
+    event: 'UNHANDLED_SERVER_STARTUP_ERROR',
+    error: error.message,
+    stack: error.stack
+  });
+
+  process.exitCode = 1;
+});

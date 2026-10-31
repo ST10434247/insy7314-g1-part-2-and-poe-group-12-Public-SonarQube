@@ -51,7 +51,10 @@ export default function BookingManagement() {
 
   useEffect(() => {
     if (user?.role === 'freelancer' && token) {
-      loadBookings();
+      loadBookings().catch((err) => {
+        setError(err.message || 'Unable to load bookings.');
+        setLoading(false);
+      });
     }
   }, [user, token]);
 
