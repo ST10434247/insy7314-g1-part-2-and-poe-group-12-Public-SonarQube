@@ -76,7 +76,7 @@ const apiLimiter = rateLimit({
 // Apply a stricter limit to authentication endpoints.
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 10,
+  limit: 20,
   standardHeaders: 'draft-8',
   legacyHeaders: false,
   message: {

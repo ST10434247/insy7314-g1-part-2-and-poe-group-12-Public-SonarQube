@@ -36,3 +36,5 @@
 {"event":"SERVER_STARTED","level":"info","message":"SERVER_STARTED","port":"3000","protocol":"HTTPS","service":"hustlehub-backend","timestamp":"2026-10-31T13:02:41.716Z"}
 {"database":"test","event":"MONGODB_CONNECTED","host":"ac-z6ql7kp-shard-00-02.3srudxy.mongodb.net","level":"info","message":"MONGODB_CONNECTED","service":"hustlehub-backend","timestamp":"2026-10-31T13:09:51.349Z"}
 {"event":"SERVER_STARTED","level":"info","message":"SERVER_STARTED","port":"3000","protocol":"HTTPS","service":"hustlehub-backend","timestamp":"2026-10-31T13:09:51.362Z"}
+{"database":"test","event":"MONGODB_CONNECTED","host":"ac-z6ql7kp-shard-00-02.3srudxy.mongodb.net","level":"info","message":"MONGODB_CONNECTED","service":"hustlehub-backend","timestamp":"2026-10-31T13:53:09.990Z"}
+{"event":"SERVER_STARTED","level":"info","message":"SERVER_STARTED","port":"3000","protocol":"HTTPS","service":"hustlehub-backend","timestamp":"2026-10-31T13:53:10.019Z"}
