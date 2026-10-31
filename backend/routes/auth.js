@@ -1,3 +1,4 @@
+
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
@@ -129,7 +130,15 @@ router.post(
   handleValidationErrors,
   async (req, res) => {
     try {
-      const { email, password } = req.body;
+      const { password } = req.body;
+      const email = req.body.email;
+
+      // Ensure the validated email is a string before querying MongoDB.
+      if (typeof email !== 'string') {
+        return res.status(400).json({
+          error: 'Please provide a valid email address.'
+        });
+      }
 
       // Passwords and lockout fields are excluded from normal queries, so explicitly include them.
       const user = await User.findOne({ email }).select(

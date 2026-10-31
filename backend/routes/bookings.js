@@ -35,12 +35,16 @@ router.post(
         try {
             const { gigId, requirements = '' } = req.body;
 
-            // Validate the gig ID before querying MongoDB.
-            if (!mongoose.isValidObjectId(gigId)) {
-                return res.status(400).json({
-                    error: 'A valid gigId is required.'
-                });
-            }
+        if (
+            typeof gigId !== 'string' ||
+            !mongoose.isObjectIdOrHexString(gigId)
+        ) {
+            return res.status(400).json({
+                error: 'A valid gigId is required.'
+            });
+        }
+
+        const gigObjectId = new mongoose.Types.ObjectId(gigId);
 
             // Requirements are optional, but must be a string of reasonable length.
             if (
@@ -54,7 +58,7 @@ router.post(
 
             // Only active gigs can receive new bookings.
             const gig = await Gig.findOne({
-                _id: gigId,
+                _id: gigObjectId,
                 status: 'active'
             });
 

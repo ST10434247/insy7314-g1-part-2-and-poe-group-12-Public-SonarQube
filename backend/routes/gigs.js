@@ -147,7 +147,7 @@ router.get(
       // Inactive gigs remain stored but are excluded from browsing.
       const filter = { status: 'active' };
 
-      // Apply the category filter only when a validated string is supplied.
+       // Apply the category filter only when a validated string is supplied.
       if (typeof req.query.category === 'string') {
         filter.category = req.query.category.trim();
       }

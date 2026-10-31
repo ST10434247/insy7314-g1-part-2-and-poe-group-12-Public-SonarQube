@@ -22,16 +22,23 @@ router.post(
         try {
             const { bookingId } = req.body;
 
-            if (!mongoose.isValidObjectId(bookingId)) {
+            // Validate the booking ID before querying MongoDB.
+            if (
+                typeof bookingId !== 'string' ||
+                !mongoose.isObjectIdOrHexString(bookingId)
+            ) {
                 return res.status(400).json({
                     error: 'A valid bookingId is required.'
                 });
             }
 
+            const bookingObjectId = new mongoose.Types.ObjectId(bookingId);
+            const userId = new mongoose.Types.ObjectId(req.user.id);
+
             // Only the client who owns the booking can create its transaction.
             const booking = await Booking.findOne({
-                _id: bookingId,
-                client: req.user.id
+                _id: bookingObjectId,
+                client: userId
             });
 
             if (!booking) {
@@ -113,10 +120,12 @@ router.get(
     authorizeRoles('client', 'freelancer'),
     async (req, res) => {
         try {
+            const userId = new mongoose.Types.ObjectId(req.user.id);
+
             const userFilter =
                 req.user.role === 'client'
-                    ? { client: req.user.id }
-                    : { freelancer: req.user.id };
+                    ? { client: userId }
+                    : { freelancer: userId };
 
             const transactions = await Transaction.find(userFilter)
                 .populate('booking', 'status')
@@ -152,6 +161,8 @@ router.get(
     authorizeRoles('freelancer'),
     async (req, res) => {
         try {
+            const freelancerId = new mongoose.Types.ObjectId(req.user.id);
+
             // Determine the current South African tax year (1 March to 28 February).
             // South Africa uses UTC+2 throughout the year.
             const southAfricanTime = new Date(Date.now() + (2 * 60 * 60 * 1000));
@@ -173,7 +184,7 @@ router.get(
             const [summary] = await Transaction.aggregate([
                 {
                     $match: {
-                        freelancer: new mongoose.Types.ObjectId(req.user.id),
+                        freelancer: freelancerId,
                         status: 'paid'
                     }
                 },
@@ -186,11 +197,11 @@ router.get(
                 }
             ]);
 
-             // Calculate paid income within the current SARS tax year.
+            // Calculate paid income within the current SARS tax year.
             const [taxYearSummary] = await Transaction.aggregate([
                 {
                     $match: {
-                        freelancer: new mongoose.Types.ObjectId(req.user.id),
+                        freelancer: freelancerId,
                         status: 'paid',
                         paidAt: {
                             $gte: taxYearStart,
@@ -209,7 +220,7 @@ router.get(
 
             // Retrieve the individual paid transactions for the breakdown.
             const transactions = await Transaction.find({
-                freelancer: req.user.id,
+                freelancer: freelancerId,
                 status: 'paid'
             })
                 .populate('booking', 'status')
@@ -312,14 +323,24 @@ router.patch(
             const { id } = req.params;
             const { status } = req.body;
 
-            if (!mongoose.isValidObjectId(id)) {
+            // Validate the transaction ID before querying MongoDB.
+            if (
+                typeof id !== 'string' ||
+                !mongoose.isObjectIdOrHexString(id)
+            ) {
                 return res.status(400).json({
                     error: 'Invalid transaction ID.'
                 });
             }
 
+            const transactionObjectId = new mongoose.Types.ObjectId(id);
+            const userId = new mongoose.Types.ObjectId(req.user.id);
+
             // Clients can only select these statuses.
-            if (!['paid', 'failed'].includes(status)) {
+            if (
+                typeof status !== 'string' ||
+                !['paid', 'failed'].includes(status)
+            ) {
                 return res.status(400).json({
                     error: 'Status must be paid or failed.'
                 });
@@ -327,8 +348,8 @@ router.patch(
 
             // Only the client who owns the transaction can update it.
             const transaction = await Transaction.findOne({
-                _id: id,
-                client: req.user.id
+                _id: transactionObjectId,
+                client: userId
             });
 
             if (!transaction) {
@@ -343,10 +364,11 @@ router.patch(
                     error: 'Only pending transactions can be updated.'
                 });
             }
+            
             // Retrieve the associated booking and verify client ownership.
             const booking = await Booking.findOne({
                 _id: transaction.booking,
-                client: req.user.id
+                client: userId
             });
 
             if (!booking) {

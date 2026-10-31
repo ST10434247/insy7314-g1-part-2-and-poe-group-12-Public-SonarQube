@@ -1,3 +1,4 @@
+
 const express = require('express');
 const mongoose = require('mongoose');
 const AuditLog = require('../models/AuditLog');
@@ -16,6 +17,15 @@ const RESOLUTION_STATUSES = [
     'accepted',
     'cancelled'
 ];
+
+const parsePositiveInteger = (value, fallback) => {
+    if (typeof value !== 'string' || !/^\d+$/.test(value)) {
+        return fallback;
+    }
+
+    const parsed = Number.parseInt(value, 10);
+    return parsed > 0 ? parsed : fallback;
+};
 
 /*
  * GET /api/admin/disputes
@@ -63,24 +73,28 @@ router.get(
     authorizeRoles('admin'),
     async (req, res) => {
         try {
-            const page = Math.max(1, parseInt(req.query.page, 10) || 1);
-            const limit = Math.min(
-                100,
-                Math.max(1, parseInt(req.query.limit, 10) || 20)
-            );
+            const page = parsePositiveInteger(req.query.page, 1);
+            const limit = Math.min(100, parsePositiveInteger(req.query.limit, 20));
 
             const filter = {};
 
             // Allow administrators to filter audit records by action.
-            if (req.query.action) {
-                filter.action = req.query.action;
+            if (typeof req.query.action === 'string') {
+                const action = req.query.action.trim();
+
+                if (action.length > 0 && action.length <= 100) {
+                    filter.action = action;
+                }
             }
 
             // Only valid audit statuses may be used as filters.
-            if (req.query.status) {
+            if (req.query.status !== undefined) {
                 const validStatuses = ['SUCCESS', 'FAILURE', 'WARNING'];
 
-                if (!validStatuses.includes(req.query.status)) {
+                if (
+                    typeof req.query.status !== 'string' ||
+                    !validStatuses.includes(req.query.status)
+                ) {
                     return res.status(400).json({
                         error: 'Invalid audit status filter.'
                     });
