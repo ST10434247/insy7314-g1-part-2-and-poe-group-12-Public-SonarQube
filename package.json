@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "main": "server.js",
+  "overrides": {
+    "handlebars": "4.7.10"
+  },
   "scripts": {
     "start": "node backend/server.js",
     "dev": "nodemon backend/server.js",
