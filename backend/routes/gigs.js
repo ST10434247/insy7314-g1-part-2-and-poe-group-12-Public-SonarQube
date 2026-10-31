@@ -5,6 +5,8 @@ const express = require('express');
 // Imports the Mongoose model that represents gig listings in MongoDB.
 const Gig = require('../models/Gig');
 
+const mongoose = require('mongoose');
+
 // Imports middleware for verifying JWTs and restricting endpoints to specific roles.
 const {
   authenticateToken,
@@ -145,9 +147,9 @@ router.get(
       // Inactive gigs remain stored but are excluded from browsing.
       const filter = { status: 'active' };
 
-      // Apply the optional category filter when the caller supplies one.
-      if (req.query.category) {
-        filter.category = req.query.category;
+      // Apply the category filter only when a validated string is supplied.
+      if (typeof req.query.category === 'string') {
+        filter.category = req.query.category.trim();
       }
 
       // Retrieve matching gigs, newest first.
@@ -194,8 +196,10 @@ router.get(
     try {
       // Find the requested gig only if it is active.
       // Populate only the freelancer's email for public display.
+      const gigId = new mongoose.Types.ObjectId(req.params.id);
+      
       const gig = await Gig.findOne({
-        _id: req.params.id,
+        _id: gigId,
         status: 'active',
       })
         .populate('freelancer', 'email')
@@ -302,6 +306,7 @@ router.put(
 
   async (req, res) => {
     try {
+      const gigId = new mongoose.Types.ObjectId(req.params.id);
       // Define an allowlist of fields that a freelancer may update.
       // Fields such as _id, freelancer, createdAt, and __v are excluded.
       const allowedFields = [
@@ -338,7 +343,7 @@ router.put(
       // Find the gig using both its ID and the authenticated user's ID.
       // Including the owner in the query enforces ownership at database level.
       const gig = await Gig.findOne({
-        _id: req.params.id,
+        _id: gigId,
         freelancer: req.user.id,
       });
 
@@ -394,10 +399,11 @@ router.delete(
 
   async (req, res) => {
     try {
+      const gigId = new mongoose.Types.ObjectId(req.params.id);
       // Delete only if both the gig ID and authenticated owner match.
       // This prevents one freelancer from deleting another's listing.
       const gig = await Gig.findOneAndDelete({
-        _id: req.params.id,
+        _id: gigId,
         freelancer: req.user.id,
       });
 
