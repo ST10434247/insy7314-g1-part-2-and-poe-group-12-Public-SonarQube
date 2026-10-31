@@ -6,7 +6,7 @@ WORKDIR /app
 
 # Copy package manifests and install production dependencies only.
 COPY package*.json ./
-RUN npm ci --omit=dev
+RUN npm ci --omit=dev --ignore-scripts
 
 # Copy backend application source.
 COPY backend/ ./backend/

@@ -42,7 +42,7 @@ jobs:
           cache: npm
 
       - name: Install backend dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Run backend static analysis
         run: npm run lint:backend
@@ -105,7 +105,7 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install frontend dependencies
-        run: npm ci --prefix frontend
+        run: npm ci --prefix frontend --ignore-scripts
 
       - name: Run frontend static analysis
         run: npm run lint --prefix frontend
