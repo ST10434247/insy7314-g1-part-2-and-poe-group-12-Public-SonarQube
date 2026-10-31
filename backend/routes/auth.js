@@ -6,6 +6,8 @@ const { body } = require('express-validator');
 const handleValidationErrors = require('../middleware/validate');
 const { authenticateToken } = require('../middleware/auth');
 const User = require('../models/User');
+const logAudit = require('../utils/auditLogger');
+const logger = require('../config/logger');
 
 // USER REGISTRATION AND LOGIN
 // VALIDATES USER'S DETAILS, BCRYPT FOR HASH PASSWORD THEN JWT SESSION TOKEN IF LOGIN SUCCESSFUL
@@ -52,6 +54,17 @@ router.post(
         role,
       });
 
+      await logAudit({
+        userId: user._id,
+        userEmail: user.email,
+        action: 'USER_REGISTERED',
+        ipAddress: req.ip,
+        details: {
+          role: user.role
+        },
+        status: 'SUCCESS'
+      });
+
       return res.status(201).json({
         message: 'User registered successfully!',
         user: {
@@ -68,7 +81,21 @@ router.post(
         });
       }
 
-      console.error('Registration failed:', error.message);
+      logger.error('REGISTRATION_FAILED', {
+        event: 'REGISTRATION_FAILED',
+        error: error.message,
+        stack: error.stack
+      });
+
+      await logAudit({
+        userEmail: req.body.email,
+        action: 'USER_REGISTRATION_FAILED',
+        ipAddress: req.ip,
+        details: {
+          reason: 'Unexpected registration error'
+        },
+        status: 'FAILURE'
+      });
 
       return res.status(500).json({
         error: 'Unable to register user.',
@@ -84,6 +111,7 @@ router.post(
 // (express-validator, 2026)
 
 // Authenticate against the stored user record and issue a JWT.
+
 router.post(
   '/login',
   [
@@ -103,18 +131,100 @@ router.post(
     try {
       const { email, password } = req.body;
 
-      // Passwords are excluded from normal queries, so explicitly include it.
-      const user = await User.findOne({ email }).select('+password');
+      // Passwords and lockout fields are excluded from normal queries, so explicitly include them.
+      const user = await User.findOne({ email }).select(
+        '+password +failedLoginAttempts +lockUntil'
+      );
 
-      // Use the same response for unknown emails and incorrect passwords.
-      if (!user || !(await bcrypt.compare(password, user.password))) {
-        return res.status(401).json({
-          error: 'Invalid email or password.',
+      // Use the same response for unknown emails, incorrect passwords and locked accounts.
+      const invalidCredentials = () => res.status(401).json({
+        error: 'Invalid email or password.',
+      });
+
+      if (!user) {
+        await logAudit({
+          userEmail: email,
+          action: 'USER_LOGIN_FAILED',
+          ipAddress: req.ip,
+          details: {
+            reason: 'Invalid credentials'
+          },
+          status: 'FAILURE'
         });
+
+        return invalidCredentials();
       }
 
+      // Reject login attempts while the account lockout is active.
+      if (user.lockUntil && user.lockUntil > Date.now()) {
+        await logAudit({
+          userId: user._id,
+          userEmail: user.email,
+          action: 'USER_LOGIN_BLOCKED',
+          ipAddress: req.ip,
+          details: {
+            reason: 'Account temporarily locked'
+          },
+          status: 'WARNING'
+        });
+
+        return invalidCredentials();
+      }
+
+      // Reset expired lockouts before processing another login attempt.
+      if (user.lockUntil && user.lockUntil <= Date.now()) {
+        user.failedLoginAttempts = 0;
+        user.lockUntil = null;
+      }
+
+      // Compare the submitted password with the stored password hash.
+      if (!(await bcrypt.compare(password, user.password))) {
+        user.failedLoginAttempts += 1;
+
+        // Lock the account after five consecutive failed login attempts.
+        if (user.failedLoginAttempts >= 5) {
+          user.lockUntil = new Date(Date.now() + 15 * 60 * 1000);
+
+          await logAudit({
+            userId: user._id,
+            userEmail: user.email,
+            action: 'USER_ACCOUNT_LOCKED',
+            ipAddress: req.ip,
+            details: {
+              failedAttempts: user.failedLoginAttempts,
+              lockDurationMinutes: 15
+            },
+            status: 'WARNING'
+          });
+        }
+
+        await user.save();
+
+        await logAudit({
+          userId: user._id,
+          userEmail: user.email,
+          action: 'USER_LOGIN_FAILED',
+          ipAddress: req.ip,
+          details: {
+            reason: 'Invalid credentials',
+            failedAttempts: user.failedLoginAttempts
+          },
+          status: 'FAILURE'
+        });
+
+        return invalidCredentials();
+      }
+
+      // Reset failed login attempts after successful authentication.
+      user.failedLoginAttempts = 0;
+      user.lockUntil = null;
+      await user.save();
+
       if (!process.env.JWT_SECRET) {
-        console.error('JWT_SECRET is not configured.');
+        logger.error('JWT_CONFIGURATION_ERROR', {
+          event: 'JWT_CONFIGURATION_ERROR',
+          reason: 'JWT_SECRET is not configured'
+        });
 
         return res.status(500).json({
           error: 'Authentication is temporarily unavailable.',
@@ -130,6 +240,17 @@ router.post(
         { expiresIn: '1h' }
       );
 
+      await logAudit({
+        userId: user._id,
+        userEmail: user.email,
+        action: 'USER_LOGIN_SUCCESS',
+        ipAddress: req.ip,
+        details: {
+          role: user.role
+        },
+        status: 'SUCCESS'
+      });
+
       return res.status(200).json({
         message: 'Login successful!',
         token,
@@ -140,7 +261,22 @@ router.post(
         },
       });
     } catch (error) {
-      console.error('Login failed:', error.message);
+      logger.error('LOGIN_ERROR', {
+        event: 'LOGIN_ERROR',
+        ipAddress: req.ip,
+        error: error.message,
+        stack: error.stack
+      });
+
+      await logAudit({
+        userEmail: req.body.email,
+        action: 'USER_LOGIN_ERROR',
+        ipAddress: req.ip,
+        details: {
+          reason: 'Unexpected authentication error'
+        },
+        status: 'FAILURE'
+      });
 
       return res.status(500).json({
         error: 'Unable to log in.',
@@ -148,6 +284,7 @@ router.post(
     }
   }
 );
+
 
 // Protected endpoint used to demonstrate that a valid JWT is required
 // before authenticated user information can be accessed.

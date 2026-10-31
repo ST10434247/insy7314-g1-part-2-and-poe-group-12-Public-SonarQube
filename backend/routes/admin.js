@@ -1,7 +1,9 @@
 const express = require('express');
 const mongoose = require('mongoose');
-
+const AuditLog = require('../models/AuditLog');
+const logger = require('../config/logger');
 const Booking = require('../models/Booking');
+
 const { authenticateToken, authorizeRoles } = require('../middleware/auth');
 
 const router = express.Router();
@@ -42,6 +44,83 @@ router.get(
 
             return res.status(500).json({
                 error: 'Unable to retrieve disputes.'
+            });
+        }
+    }
+);
+
+/*
+ * GET /api/admin/audit-logs
+ *
+ * Returns security audit records for administrative review.
+ * Only administrators may access this endpoint.
+ *
+ * Supports pagination and filtering by action and status.
+ */
+router.get(
+    '/audit-logs',
+    authenticateToken,
+    authorizeRoles('admin'),
+    async (req, res) => {
+        try {
+            const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+            const limit = Math.min(
+                100,
+                Math.max(1, parseInt(req.query.limit, 10) || 20)
+            );
+
+            const filter = {};
+
+            // Allow administrators to filter audit records by action.
+            if (req.query.action) {
+                filter.action = req.query.action;
+            }
+
+            // Only valid audit statuses may be used as filters.
+            if (req.query.status) {
+                const validStatuses = ['SUCCESS', 'FAILURE', 'WARNING'];
+
+                if (!validStatuses.includes(req.query.status)) {
+                    return res.status(400).json({
+                        error: 'Invalid audit status filter.'
+                    });
+                }
+
+                filter.status = req.query.status;
+            }
+
+            const skip = (page - 1) * limit;
+
+            const [auditLogs, total] = await Promise.all([
+                AuditLog.find(filter)
+                    .populate('userId', 'email role')
+                    .sort({ createdAt: -1 })
+                    .skip(skip)
+                    .limit(limit)
+                    .lean(),
+
+                AuditLog.countDocuments(filter)
+            ]);
+
+            return res.status(200).json({
+                auditLogs,
+                pagination: {
+                    total,
+                    page,
+                    limit,
+                    totalPages: Math.ceil(total / limit)
+                }
+            });
+        } catch (error) {
+            logger.error('ADMIN_AUDIT_LOG_RETRIEVAL_FAILED', {
+                event: 'ADMIN_AUDIT_LOG_RETRIEVAL_FAILED',
+                adminId: req.user?.id,
+                error: error.message,
+                stack: error.stack
+            });
+
+            return res.status(500).json({
+                error: 'Unable to retrieve audit logs.'
             });
         }
     }
