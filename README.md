@@ -345,7 +345,7 @@ Evidence is kept alongside the relevant project area:
 
 ### Grafana application-log monitoring
 
-![HustleHub Grafana application logs](docs/screenshots/monitoring/grafana-Live-Monitoring-Dashboard.PNG)
+![HustleHub Grafana application logs](docs/screenshots/monitoring/grafana Live Monitoring Dashboard.PNG)
 
 ### SonarQube quality gate
 
