@@ -1,13 +1,13 @@
-# HustleHub — Part 2 Submission
+# HustleHub — Part 3 Submission
 
 HustleHub is a secure gig marketplace built with React, Express, Node.js and MongoDB. Clients can browse gigs, book freelancers and make simulated payments. Freelancers can publish gigs, manage bookings and view income information. Administrators can review eligible disputes and inspect security audit records.
 
 ## Related repositories and assessment scope
 
-- **Part 2 submission repository:** this repository.
+- **Part 3 submission repository:** this repository.
 - **SonarQube-connected fork:** [HustleHub – Part 3 Fork](https://github.com/ST10434247/insy7314-g1-part-2-and-poe-group-12-Public-SonarQube.git). This is the repo used for SonarQube Cloud integration due to permission issues;
 
-The Part 2 implementation extends the base marketplace with the additional security, workflow, reporting, testing and monitoring features listed below. This section is intended as a marking guide: each item points to the relevant implementation and, where available, test/evidence location.
+The Part 3 implementation extends the base marketplace with the additional security, workflow, reporting, testing and monitoring features listed below. This section is intended as a marking guide: each item points to the relevant implementation and, where available, test/evidence location.
 
 ## Additional features and marking guide
 
