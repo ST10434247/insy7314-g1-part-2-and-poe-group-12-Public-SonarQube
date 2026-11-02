@@ -196,7 +196,16 @@
           "listen": "test",
           "script": {
             "exec": [
-              ""
+              "pm.test(\"Login returns a valid token\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "\r",
+              "    const response = pm.response.json();\r",
+              "\r",
+              "    pm.expect(response).to.have.property(\"token\");\r",
+              "    pm.expect(response.token).to.be.a(\"string\").and.not.empty;\r",
+              "\r",
+              "    pm.collectionVariables.set(\"authToken\", response.token);\r",
+              "});"
             ],
             "type": "text/javascript",
             "packages": {}
@@ -264,6 +273,16 @@
     {
       "name": "Protected - Valid Token",
       "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{authToken}}",
+              "type": "string"
+            }
+          ]
+        },
         "method": "GET",
         "header": [
           {
@@ -370,6 +389,15 @@
             "api",
             "auth",
             "protected"
+          ],
+          "query": [
+            {
+              "key": "Authorization",
+              "value": "Bearer {{authToken}}",
+              "type": "text",
+              "id": 0,
+              "disabled": true
+            }
           ]
         }
       },
