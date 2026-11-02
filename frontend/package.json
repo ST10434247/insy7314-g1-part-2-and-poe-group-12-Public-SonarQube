@@ -21,13 +21,15 @@
     "@svgr/webpack": "6.5.1",
     "@tootallnate/once": "2.0.1",
     "resolve-url-loader": "5.0.0",
-    "serialize-javascript": "7.1.4"
+    "serialize-javascript": "7.1.4",
+    "webpack-dev-server": "5.2.7"
   },
   "scripts": {
     "start": "set PORT=3001 && react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --watchAll=false",
-    "lint": "eslint --no-eslintrc --config node_modules/eslint-config-react-app/index.js src"
+    "lint": "eslint --no-eslintrc --config node_modules/eslint-config-react-app/index.js src",
+    "postinstall": "patch-package"
   },
   "browserslist": {
     "production": [
@@ -42,6 +44,7 @@
     ]
   },
   "devDependencies": {
+    "patch-package": "^8.0.1",
     "yaml": "^2.9.1"
   }
 }

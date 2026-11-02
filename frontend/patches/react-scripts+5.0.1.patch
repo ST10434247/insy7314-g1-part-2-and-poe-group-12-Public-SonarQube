@@ -1,0 +1,157 @@
+diff --git a/node_modules/react-scripts/config/webpackDevServer.config.js b/node_modules/react-scripts/config/webpackDevServer.config.js
+index 522a81b..dfe6157 100644
+--- a/node_modules/react-scripts/config/webpackDevServer.config.js
++++ b/node_modules/react-scripts/config/webpackDevServer.config.js
+@@ -1,3 +1,4 @@
++
+ // @remove-on-eject-begin
+ /**
+  * Copyright (c) 2015-present, Facebook, Inc.
+@@ -24,6 +25,7 @@ const sockPort = process.env.WDS_SOCKET_PORT;
+ module.exports = function (proxy, allowedHost) {
+   const disableFirewall =
+     !proxy || process.env.DANGEROUSLY_DISABLE_HOST_CHECK === 'true';
++
+   return {
+     // WebpackDevServer 2.4.3 introduced a security fix that prevents remote
+     // websites from potentially accessing local content through DNS rebinding:
+@@ -44,16 +46,19 @@ module.exports = function (proxy, allowedHost) {
+     // Note: ["localhost", ".localhost"] will support subdomains - but we might
+     // want to allow setting the allowedHosts manually for more complex setups
+     allowedHosts: disableFirewall ? 'all' : [allowedHost],
++
+     headers: {
+       'Access-Control-Allow-Origin': '*',
+       'Access-Control-Allow-Methods': '*',
+       'Access-Control-Allow-Headers': '*',
+     },
++
+     // Enable gzip compression of generated files.
+     compress: true,
++
+     static: {
+       // By default WebpackDevServer serves physical files from current directory
+-      // in addition to all the virtual build products that it serves from memory.
++      // in addition to all of the virtual build products that it serves in memory.
+       // This is confusing because those files won’t automatically be available in
+       // production build folder unless we copy them. However, copying the whole
+       // project directory is dangerous because we may expose sensitive files.
+@@ -68,6 +73,7 @@ module.exports = function (proxy, allowedHost) {
+       // use an image, put it in `src` and `import` it from JavaScript instead.
+       directory: paths.appPublic,
+       publicPath: [paths.publicUrlOrPath],
++
+       // By default files from `contentBase` will not trigger a page reload.
+       watch: {
+         // Reportedly, this avoids CPU overload on some systems.
+@@ -77,6 +83,7 @@ module.exports = function (proxy, allowedHost) {
+         ignored: ignoredFiles(paths.appSrc),
+       },
+     },
++
+     client: {
+       webSocketURL: {
+         // Enable custom sockjs pathname for websocket connection to hot reloading server.
+@@ -86,11 +93,13 @@ module.exports = function (proxy, allowedHost) {
+         pathname: sockPath,
+         port: sockPort,
+       },
++
+       overlay: {
+         errors: true,
+         warnings: false,
+       },
+     },
++
+     devMiddleware: {
+       // It is important to tell WebpackDevServer to use the same "publicPath" path as
+       // we specified in the webpack config. When homepage is '.', default to serving
+@@ -99,37 +108,68 @@ module.exports = function (proxy, allowedHost) {
+       publicPath: paths.publicUrlOrPath.slice(0, -1),
+     },
+ 
+-    https: getHttpsConfig(),
++    server: (() => {
++      const httpsConfig = getHttpsConfig();
++
++      if (!httpsConfig) {
++        return 'http';
++      }
++
++      return {
++        type: 'https',
++        options: typeof httpsConfig === 'object' ? httpsConfig : {},
++      };
++    })(),
++
+     host,
++
+     historyApiFallback: {
+-      // Paths with dots should still use the history fallback.
++      // Paths with dots should still have the history fallback.
+       // See https://github.com/facebook/create-react-app/issues/387.
+       disableDotRule: true,
+       index: paths.publicUrlOrPath,
+     },
+-    // `proxy` is run between `before` and `after` `webpack-dev-server` hooks
++
+     proxy,
+-    onBeforeSetupMiddleware(devServer) {
+-      // Keep `evalSourceMapMiddleware`
+-      // middlewares before `redirectServedPath` otherwise will not have any effect
+-      // This lets us fetch source contents from webpack for the error overlay
+-      devServer.app.use(evalSourceMapMiddleware(devServer));
++
++    setupMiddlewares(middlewares, devServer) {
++      if (!devServer) {
++        throw new Error('webpack-dev-server is not defined');
++      }
++
++      // Keep evalSourceMapMiddleware before webpack-dev-middleware,
++      // while preserving Webpack Dev Server security middleware.
++      const devMiddlewareIndex = middlewares.findIndex(
++        ({ name }) => name === 'webpack-dev-middleware'
++      );
++
++      if (devMiddlewareIndex === -1) {
++        throw new Error('webpack-dev-middleware was not found');
++      }
++
++      middlewares.splice(devMiddlewareIndex, 0, {
++        name: 'eval-source-map-middleware',
++        middleware: evalSourceMapMiddleware(devServer),
++      });
+ 
+       if (fs.existsSync(paths.proxySetup)) {
+-        // This registers user provided middleware for proxy reasons
++        // This registers user-provided middleware for proxy reasons.
+         require(paths.proxySetup)(devServer.app);
+       }
+-    },
+-    onAfterSetupMiddleware(devServer) {
+-      // Redirect to `PUBLIC_URL` or `homepage` from `package.json` if url not match
+-      devServer.app.use(redirectServedPath(paths.publicUrlOrPath));
+-
+-      // This service worker file is effectively a 'no-op' that will reset any
+-      // previous service worker registered for the same host:port combination.
+-      // We do this in development to avoid hitting the production cache if
+-      // it used the same host and port.
+-      // https://github.com/facebook/create-react-app/issues/2272#issuecomment-302832432
+-      devServer.app.use(noopServiceWorkerMiddleware(paths.publicUrlOrPath));
++
++      // Redirect to PUBLIC_URL or homepage when the URL does not match.
++      middlewares.push(
++        {
++          name: 'redirect-served-path',
++          middleware: redirectServedPath(paths.publicUrlOrPath),
++        },
++        {
++          name: 'noop-service-worker',
++          middleware: noopServiceWorkerMiddleware(paths.publicUrlOrPath),
++        }
++      );
++
++      return middlewares;
+     },
+   };
+ };
