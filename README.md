@@ -315,7 +315,7 @@ The other collections in `tests/Postman/` are retained for the Part 1 security c
 
 The GitHub Actions workflow is `.github/workflows/ci.yml`. It runs backend linting and Newman integration tests against a MongoDB service, followed by frontend linting, tests and a production build. Review the repository's Actions tab for the latest workflow result.
 
-SonarQube Cloud is connected to the group's public fork because of repository integration permissions: [HustleHub – Part 3 Fork](https://github.com/EMGPPT/insy7314-g1-part-2-and-poe-group-12-fork).
+SonarQube Cloud is connected to the group's public fork because of repository integration permissions: [HustleHub – Part 3 Fork](https://github.com/ST10434247/insy7314-g1-part-2-and-poe-group-12-Public-SonarQube.git).
 
 ## Screenshots and evidence
 
