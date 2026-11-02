@@ -1,375 +1,367 @@
-## External Service Repository
+# HustleHub — Part 2 Submission
 
-Due to repository integration permissions, SonarQube Cloud is connected
-to the group's public fork:
+HustleHub is a secure gig marketplace built with React, Express, Node.js and MongoDB. Clients can browse gigs, book freelancers and make simulated payments. Freelancers can publish gigs, manage bookings and view income information. Administrators can review eligible disputes and inspect security audit records.
 
-[HustleHub – Part 3 Fork]((https://github.com/EMGPPT/insy7314-g1-part-2-and-poe-group-12-fork))
+## Related repositories and assessment scope
 
-The fork contains the project source code and commits used for
-static code analysis.
+- **Part 2 submission repository:** this repository.
+- **SonarQube-connected fork:** [HustleHub – Part 3 Fork](https://github.com/ST10434247/insy7314-g1-part-2-and-poe-group-12-Public-SonarQube.git). This is the repo used for SonarQube Cloud integration due to permission issues;
 
-# HustleHub
+The Part 2 implementation extends the base marketplace with the additional security, workflow, reporting, testing and monitoring features listed below. This section is intended as a marking guide: each item points to the relevant implementation and, where available, test/evidence location.
 
-HustleHub is a secure gig marketplace built with a React frontend and an Express/Node.js/MongoDB backend.
+## Additional features and marking guide
 
-Clients can browse available gigs, book freelancers and make simulated payments. Freelancers can publish and manage gigs, manage bookings and track income. Administrators can review eligible disputes and inspect security audit records.
+| Additional feature | What to assess | Main implementation | Supporting tests / evidence |
+|---|---|---|---|
+| Role-based access control | Client, freelancer and administrator permissions; protected routes and role checks. | `backend/middleware/auth.js`, `backend/routes/`, `frontend/src/context/AuthContext.jsx` | `tests/Postman/HustleHub - Part 2 Security.postman_collection.json` |
+| Resource ownership enforcement | Users can only access or modify resources they are authorised to use. | `backend/routes/bookings.js`, `backend/routes/gigs.js`, `backend/routes/transactions.js` | Part 2 Postman security collection |
+| Authentication hardening | JWT authentication, password hashing, failed-login handling and inactivity logout. | `backend/routes/auth.js`, `backend/models/User.js`, `frontend/src/context/AuthContext.jsx` | Part 2 Postman collection; `tests/screenshots/` |
+| Input validation and sanitisation | Request-field validation and MongoDB query sanitisation. | `backend/middleware/validate.js`, `backend/server.js` | Part 2 Postman collection |
+| Rate limiting and secure HTTP headers | General/API and authentication rate limits; Helmet and Content Security Policy. | `backend/server.js` | Part 2 Postman collection; backend security configuration |
+| Security audit trail | Security-relevant and administrative actions recorded for review. | `backend/models/AuditLog.js`, `backend/utils/auditLogger.js`, `backend/routes/admin.js` | Part 2 Postman collection; administrator audit interface |
+| Booking and transaction workflow | Booking status lifecycle, simulated payment and transaction records. | `backend/models/Booking.js`, `backend/models/Transaction.js`, `backend/routes/bookings.js`, `backend/routes/transactions.js` | Part 2 Postman collection; `frontend/src/components/BookingManagement.jsx`, `PaymentPage.jsx` |
+| Freelancer income and tax estimate | Income totals based on paid transactions and South African tax-year estimate. | `backend/routes/transactions.js`, `frontend/src/components/TaxDashboard.jsx` | `frontend/src/tests/TaxDashboard.test.jsx` |
+| Administrator dispute management | Admin review of eligible disputes. | `backend/routes/admin.js`, `frontend/src/components/AdminDisputes.jsx` | Application workflow; admin UI |
+| Structured application logging | JSON logs with timestamps, severity and event names. | `backend/config/logger.js`, `backend/server.js`, `backend/utils/auditLogger.js` | `docs/screenshots/docker/05-backend-logs.png` |
+| Grafana/Loki log monitoring | Alloy ships application logs to Loki; Grafana dashboard displays errors, auth failures and business events. | `monitoring/`, `docker-compose.yml` | `docs/screenshots/monitoring/grafana-application-logs.png` |
+| Containerised deployment | Frontend, backend and monitoring stack started through Docker Compose. | `docker-compose.yml`, `backend/Dockerfile`, `frontend/Dockerfile` | `docs/screenshots/docker/` |
+| Automated checks and CI | Backend/frontend linting, frontend tests/build and Newman API checks in GitHub Actions. | `.github/workflows/ci.yml`, `package.json`, `frontend/package.json` | GitHub Actions run; test collections |
+| Dependency/security remediation | Dependency updates and compatibility patches retained in the lockfiles and patch files. | `package.json`, `package-lock.json`, `frontend/package-lock.json`, `patches/`, `frontend/patches/` | SonarQube evidence in `docs/screenshots/SonarQube/` |
 
-## Requirements
+### Core marketplace functionality
 
-- Node.js and npm
-- MongoDB Atlas account or another reachable MongoDB instance
-- Docker Desktop (for the containerised deployment)
-- OpenSSL or another method of generating HTTPS certificates for local development
-- Git/GitHub for source-code management
+- Client and freelancer registration and login with JWT authentication.
+- Gig creation, browsing and management.
+- Booking workflow and simulated payment/transaction handling.
+- Freelancer income reporting and a South African tax estimate.
+- Administrator dispute review and security audit-log access.
 
-## Installation and setup
+Payments are simulated. HustleHub does not process real card payments through an external payment provider. Do not enter real payment-card details.
 
-### 1. Install dependencies
+## Repository layout
 
-From the project root:
-
-```bash
-npm install
+```text
+.
+├── backend/                 Express API, models, middleware and routes
+├── frontend/                React application and frontend tests
+├── monitoring/              Loki, Alloy and Grafana configuration/dashboard
+├── docs/screenshots/         Docker, SonarQube and Grafana evidence
+├── tests/Postman/            Postman API test collections
+├── tests/screenshots/        API test screenshots
+├── logs/                     Local runtime logs (not committed)
+├── patches/                  Persisted dependency compatibility patch
+├── docker-compose.yml
+├── .env.example
+└── README.md
 ```
 
-Install the frontend dependencies:
+## Default setup: Docker Compose (recommended)
 
-```bash
-cd frontend
-npm install
-cd ..
+Docker Compose is the default setup for assessment and demonstration. It builds and runs the frontend and backend together with Loki, Alloy and Grafana. MongoDB remains an external dependency and must be reachable from the backend container.
+
+### Requirements
+
+- Git.
+- Docker Desktop with the Linux container engine enabled.
+- A reachable MongoDB instance (MongoDB Atlas or a local MongoDB service).
+- OpenSSL, for generating the local HTTPS certificate.
+
+### 1. Clone the repository
+
+```powershell
+git clone <https://github.com/EMGPPT/insy7314-g1-part-2-and-poe-group-12.git>
+cd <https://github.com/EMGPPT/insy7314-g1-part-2-and-poe-group-12.git>
 ```
 
 ### 2. Configure environment variables
 
-Create a `.env` file in the project root. Do not commit this file or share its secrets.
-
-At minimum, configure the values used by the application:
-
-```env
-MONGODB_URI=your_mongodb_connection_string
-JWT_SECRET=your_long_random_secret
-ADMIN_EMAIL=admin@example.com
-ADMIN_PASSWORD=your_admin_password
+```powershell
+Copy-Item .env.example .env
 ```
 
-The backend also uses HTTPS certificate path configuration. Ensure the configured paths match the certificate files available to the backend. Use a strong, unique JWT secret and keep credentials out of source control.
+Edit `.env` and set the following values:
 
-### 3. Generate HTTPS certificates for local development
+- `MONGODB_URI`: a valid MongoDB connection string.
+- `JWT_SECRET`: a unique, long random signing secret.
+- `ADMIN_EMAIL` and `ADMIN_PASSWORD`: credentials for the initial administrator account.
+- `GRAFANA_ADMIN_USER` and `GRAFANA_ADMIN_PASSWORD`: local Grafana login credentials.
 
-The backend uses HTTPS for local development. For example, using OpenSSL:
+Generate a random secret using Node.js (run separately for each secret):
 
 ```powershell
-New-Item -ItemType Directory -Force backend/certs
+node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+```
 
+Do not commit `.env` or share its contents. `.env.example` contains placeholders only.
+
+**MongoDB connection notes:** MongoDB is not included as a Docker Compose service. For MongoDB running on the Windows host, a typical connection string uses `mongodb://host.docker.internal:27017/hustlehub`. For MongoDB Atlas, use the connection string supplied by Atlas and ensure its network access settings permit the connection. Do not use `127.0.0.1` in the container's MongoDB URI to reach a database running on the Windows host.
+
+### 3. Generate the HTTPS certificate
+
+The backend expects the certificate files in `backend/certs/`; Compose mounts this directory read-only into the backend container.
+
+```powershell
+New-Item -ItemType Directory -Force .\backend\certs
 openssl req -x509 -newkey rsa:2048 -nodes `
-  -keyout backend/certs/key.pem `
-  -out backend/certs/cert.pem `
-  -days 365
+  -keyout .\backend\certs\key.pem `
+  -out .\backend\certs\cert.pem `
+  -days 365 `
+  -subj "/CN=localhost"
 ```
 
-The certificate and private key paths must match the configuration used by `backend/server.js`. A browser or API client may warn that a self-signed certificate is not trusted. This is expected for local development.
+This self-signed certificate is for local development only. Browsers and API clients may show a certificate warning. Do not use it in production.
 
-## Running the application locally
+### 4. Validate and start the complete stack
 
-### Start the backend
+Make sure Docker Desktop is running, then run: 
 
-From the project root:
-
-```bash
-npm run dev
-```
-
-The backend runs at:
-
-```text
-https://localhost:3000
-```
-
-### Start the frontend
-
-Open a second terminal:
-
-```bash
-cd frontend
-npm start
-```
-
-The React development server uses port `3001` and proxies API requests to `https://localhost:3000`. The frontend and backend HTTPS configuration must agree.
-
-## Running with Docker Compose
-
-Docker Compose runs the backend and frontend as separate containers. Configure the root `.env` file before starting the services. The backend container uses the configured MongoDB connection string and mounts the local certificate directory and log directory.
-
-Build and start the application from the project root:
-
-```bash
+```powershell
+docker compose config --quiet
 docker compose up --build -d
-```
-
-Check container status:
-
-```bash
 docker compose ps
 ```
 
-The containerised frontend is available at:
+The first start builds the frontend/backend images and pulls the monitoring images. Wait for the backend to connect to MongoDB before using the application.
 
-```text
-http://localhost:3001
-```
+### 5. Open the application and monitoring dashboard
 
-The backend API is available at:
+| Service | Address | Notes |
+|---|---|---|
+| React frontend | `http://localhost:3001` | Main application. |
+| Backend API | `https://localhost:3000` | HTTPS with the local self-signed certificate. |
+| Grafana | `http://localhost:3002` | Local-machine access only. |
+| Loki | Internal Docker network | Not published to the host. |
+| Alloy | Internal Docker network | Tails the mounted application log files. |
 
-```text
-https://localhost:3000
-```
+Sign in to Grafana with `GRAFANA_ADMIN_USER` and `GRAFANA_ADMIN_PASSWORD` from `.env`, then open **Dashboards → HustleHub → HustleHub - Application Logs**.
 
-View backend logs:
+### Useful Docker commands
 
-```bash
-docker compose logs --tail=100 backend
-```
+```powershell
+# Follow backend logs
+docker compose logs -f backend
 
-Stop the containers:
+# Inspect monitoring services
+docker compose logs --tail 100 loki alloy grafana
 
-```bash
+# Restart only application containers
+docker compose up -d backend frontend
+
+# Restart only monitoring containers
+docker compose up -d loki alloy grafana
+
+# Stop containers; named monitoring volumes are retained
 docker compose down
 ```
 
-The local development certificate is self-signed. The frontend Nginx proxy is configured to communicate with the backend container using that development certificate. This configuration is intended for the supplied local Docker setup; production deployments should use trusted certificates and certificate verification.
+Docker Compose persists Grafana, Loki and Alloy state in named volumes. `docker compose down -v` also deletes these volumes and persisted monitoring data; use it only when you intentionally want to reset monitoring.
+
+The supplied Nginx proxy disables verification of the self-signed backend certificate for this local Docker setup. This must not be copied into a production deployment.
+
+## Alternative setup: local development without Docker
+
+Use this only when you need to work directly on the React or Express source.
+
+Requirements: Node.js 20 or later, npm, a reachable MongoDB instance and OpenSSL. From the repository root, install both dependency sets:
+
+```powershell
+npm ci
+npm ci --prefix frontend
+Copy-Item .env.example .env
+```
+
+Configure `.env` as described above and generate the certificate using the same command in the Docker setup section. Then start the backend and frontend in separate terminals:
+
+**Terminal 1 — backend**
+
+```powershell
+npm run dev
+```
+
+**Terminal 2 — frontend**
+
+```powershell
+npm start --prefix frontend
+```
+
+The backend listens on `https://localhost:3000`; the frontend development server listens on `http://localhost:3001`.
 
 ## Administrator account
 
-Administrator credentials are configured through the `.env` file. If administrator provisioning is required, run:
+Administrator accounts cannot be created through public registration. Create the initial administrator after MongoDB is reachable and the environment file contains `ADMIN_EMAIL` and `ADMIN_PASSWORD`.
 
-```bash
+With Docker Compose:
+
+```powershell
+docker compose exec backend node backend/scripts/createAdmin.js
+```
+
+For a locally running backend environment:
+
+```powershell
 node backend/scripts/createAdmin.js
 ```
 
-Administrator accounts cannot be created through public registration.
+The script refuses to overwrite an existing account with the configured email.
+
+## Monitoring and Grafana
+
+The Docker Compose monitoring stack collects the backend's structured Winston log files:
+
+1. The backend writes JSON logs to `logs/app.log` and `logs/error.log`.
+2. Grafana Alloy tails those files and forwards the entries to Loki.
+3. Grafana uses the provisioned Loki data source and dashboard in `monitoring/grafana/`.
+
+Open the dashboard at:
+
+```text
+http://localhost:3002
+```
+
+Sign in with `GRAFANA_ADMIN_USER` and `GRAFANA_ADMIN_PASSWORD` from `.env`, then open **Dashboards → HustleHub → HustleHub - Application Logs**.
+
+The dashboard includes error and authentication-failure counts, booking and transaction event counts, log volume by severity, and recent application/error logs. Loki retention is configured for seven days. This is log monitoring: CPU, memory, request-latency and other infrastructure/performance metrics are not currently exported.
+
+The Grafana, Loki and Alloy configuration is stored in:
+
+- `monitoring/loki-config.yml`
+- `monitoring/alloy-config.alloy`
+- `monitoring/grafana/provisioning/datasources/loki.yml`
+- `monitoring/grafana/provisioning/dashboards/dashboards.yml`
+- `monitoring/grafana/dashboards/hustlehub-overview.json`
 
 ## Application workflow
 
-The main HustleHub workflow is:
-
 1. Users register as clients or freelancers.
-2. Users log in and receive a JWT authentication token.
+2. Users log in and receive a JWT.
 3. Freelancers create and publish gigs.
-4. Clients browse available gigs.
-5. Clients submit bookings for available gigs.
-6. Freelancers accept or reject pending bookings.
-7. Accepted bookings can proceed to simulated payment.
-8. Transactions are associated with the relevant booking, client and freelancer.
-9. Freelancers can view their associated income information and tax estimate.
+4. Clients browse available gigs and create bookings.
+5. Freelancers accept or reject pending bookings.
+6. Work can be confirmed and a transaction can be created.
+7. The client completes the simulated payment flow.
+8. Paid transactions are associated with the booking, client and freelancer.
+9. Freelancers can view their income information and tax estimate.
 10. Eligible disputes can be escalated for administrator review.
 
-Payments are simulated. HustleHub does not process real card payments through an external payment provider.
+## Freelancer income and tax dashboard
 
-## Part 3: Freelancer income and tax dashboard
+The freelancer tax dashboard uses paid HustleHub transactions to display lifetime income and income for the current South African tax year. Tax-year aggregation uses each transaction's `paidAt` date and the South African tax-year period (1 March to the end of February).
 
-The freelancer tax dashboard uses paid HustleHub transactions to display platform income for the current South African tax year. The backend income endpoint returns the freelancer's lifetime paid-income totals and the paid-income totals for the current tax year. Tax-year aggregation uses each transaction's `paidAt` date and the South African tax-year period (1 March to the end of February).
+The dashboard estimates individual income tax using the configured SARS 2026/2027 individual tax brackets and primary rebate. This is an informational estimate, not a tax assessment or substitute for advice from SARS or a registered tax practitioner. It uses HustleHub income only and does not account for outside income, deductible expenses, other deductions, medical tax credits, additional rebates or other personal tax circumstances. It does not annualise tax-year-to-date income.
 
-The dashboard estimates individual income tax using the SARS 2026/2027 individual tax brackets and the primary rebate. The calculation applies the relevant marginal rate to the portion of income within each bracket, adds the bracket's base amount where applicable, and subtracts the primary rebate. The resulting estimate is not a tax assessment.
+The calculation is implemented in `frontend/src/components/TaxDashboard.jsx`; the backend aggregation is in `backend/routes/transactions.js`; tests are in `frontend/src/tests/TaxDashboard.test.jsx`.
 
-The estimate has important limitations:
+SARS tax-rate reference: <https://www.sars.gov.za/tax-rates/income-tax/rates-of-tax-for-individuals/>
 
-- It uses paid income recorded on HustleHub only; it does not include income earned elsewhere.
-- It does not account for deductible expenses, other deductions, medical tax credits, additional rebates or other personal tax circumstances.
-- It assumes the primary rebate applies and does not calculate age-related rebates.
-- It estimates tax on the income recorded for the tax year to date; it does not forecast or annualise the user's full-year income.
-- The dashboard is an informational estimate and is not a substitute for advice from SARS or a registered tax practitioner.
+## Security controls
 
-The SARS tax rates used by the implementation are published at:  
-https://www.sars.gov.za/tax-rates/income-tax/rates-of-tax-for-individuals/
-
-The dashboard's calculation logic is implemented in `frontend/src/components/TaxDashboard.jsx`. The backend tax-year income aggregation is implemented in `backend/routes/transactions.js`. Unit tests for the tax calculation are in `frontend/src/tests/TaxDashboard.test.jsx`.
-
-## Security configuration
-
-| Security feature | Implementation |
+| Control | Implementation |
 |---|---|
-| JWT authentication | Bearer tokens are verified by authentication middleware. JWTs expire after one hour. |
-| Role-based access control | Protected routes use role checks for client, freelancer and administrator functionality. |
-| Resource ownership | Users can only modify or access resources they are authorised to access. |
-| Password security | Passwords are hashed using bcrypt. |
-| Input validation | `express-validator` validates request data and identifiers on relevant routes. |
-| Input sanitisation | MongoDB query sanitisation middleware is applied to incoming requests. |
-| Rate limiting | General API and stricter authentication rate limits are configured. |
-| Security headers | Helmet is used to configure security-related HTTP headers. |
-| Content Security Policy | Helmet is configured with a Content Security Policy. |
-| Request size limits | JSON request bodies are limited to 10 KB. |
-| Transport security | The backend uses HTTPS for local development. |
-| Login attempt protection | Repeated failed login attempts trigger a temporary account lockout. |
-| Session inactivity handling | The frontend logs out an inactive user after the configured inactivity period. |
-| Security audit trail | Authentication events and relevant application/security events are recorded in audit logs. |
+| Authentication | JWT Bearer tokens; one-hour token expiry. |
+| Password storage | bcrypt password hashing. |
+| Authorisation | Role-based checks for client, freelancer and administrator routes. |
+| Resource ownership | Users are restricted to resources they are authorised to access. |
+| Validation | `express-validator` checks relevant request fields and identifiers. |
+| Sanitisation | MongoDB query sanitisation middleware. |
+| Rate limiting | General API and stricter authentication rate limits. |
+| HTTP headers | Helmet and Content Security Policy. |
+| Request size | JSON request bodies limited to 10 KB. |
+| Login protection | Temporary lockout after five consecutive failed attempts for 15 minutes; successful login resets the failed-attempt counter. |
+| Inactivity handling | Frontend logs out after 10 minutes without detected activity. |
+| Audit records | Security and relevant user actions are recorded for administrator review. |
+| Application logs | Structured JSON logs are written to `logs/`; passwords, JWT secrets and tokens must not be logged. |
 
-### Authentication and authorisation
+## Testing and static analysis
 
-Protected API endpoints require a valid JWT Bearer token. Role-based access control prevents users from performing actions outside their authorised role. Ownership checks are also applied to protected resources. For example, a freelancer cannot modify another freelancer's gig.
+Run commands from the repository root.
 
-The login protection locks an account after five consecutive failed login attempts for a 15-minute period. A successful login resets the failed-attempt counter. The frontend inactivity control logs the user out after 10 minutes without detected activity.
+**Backend static analysis:**
 
-### Validation and sanitisation
-
-The backend validates incoming data before processing it. Examples include:
-
-- Email validation
-- Password requirements
-- User role validation
-- Gig title and description length
-- Gig category validation
-- Gig price validation
-- Delivery-day validation
-- Booking and transaction identifier validation
-
-MongoDB query sanitisation is applied to help prevent malicious query operators from being injected into requests.
-
-### Rate limiting, Helmet and Content Security Policy
-
-The API uses rate limiting to reduce abuse. Authentication endpoints receive the general API limiter as well as a stricter authentication-specific limiter.
-
-Helmet is used to configure security headers. A Content Security Policy is also configured for the application. The policy should be reviewed and updated if the application is deployed to a different environment or if additional external resources are required.
-
-### Audit logging
-
-The backend uses structured application logging and a MongoDB audit-log model. Application logs record server events and errors; audit records capture relevant security and user actions, including successful and unsuccessful authentication activity. Administrators can access the protected audit-log endpoint, with filtering and pagination supported by the API.
-
-Log files are written to the local `logs` directory. The directory is mounted into the backend container when using Docker Compose and should be handled as operational data rather than committed application source. Do not log passwords, JWT secrets or authentication tokens.
-
-## Testing
-
-HustleHub includes automated backend API testing using Postman/Newman and frontend testing using the React testing configuration.
-
-### Frontend tests
-
-Run the frontend tests from the project root:
-
-```bash
-npm test --prefix frontend -- --watchAll=false
-```
-
-The frontend test suite includes component tests and unit tests for the tax calculation. The tax calculation tests cover the primary-rebate threshold, calculations in the first and second tax brackets, a highest-bracket calculation and zero income.
-
-### Postman and Newman tests
-
-HustleHub uses Postman collections and Newman to automate backend API testing. The collections test authentication, authorisation, input validation, gig management, booking workflows, transaction processing and income retrieval.
-
-The Part 2 security collection has been extended with a Part 3 tax-dashboard request and assertions for the returned tax year, tax-year income fields and paid-transaction data. The collection is stored in:
-
-```text
-tests/Postman/HustleHub - Part 2 Security.postman_collection.json
-```
-
-Run the collection from the project root:
-
-```bash
-npx newman run "tests/Postman/HustleHub - Part 2 Security.postman_collection.json" --insecure
-```
-
-The `--insecure` option is used for local development because the backend uses a self-signed HTTPS certificate. This option is intended for local testing and is not recommended for production use. Record the latest Newman summary after running the collection; request and assertion totals can change as tests are added.
-
-The collection covers the wider marketplace workflow, including:
-
-1. Freelancer registration and login.
-2. JWT authentication and token generation.
-3. Freelancer gig creation.
-4. Client registration and login.
-5. Client booking creation.
-6. Freelancer acceptance of a booking.
-7. Transaction creation and payment/status updates.
-8. Freelancer income retrieval.
-9. Tax-year income response fields.
-10. Rejection of invalid input and unauthorised requests.
-
-### Static analysis
-
-ESLint is used for backend and frontend static analysis. The backend configuration includes security-focused ESLint rules through `eslint-plugin-security`.
-
-Run the backend analysis from the project root:
-
-```bash
+```powershell
 npm run lint:backend
 ```
 
-Run the frontend analysis:
+**Frontend static analysis:**
 
-```bash
+```powershell
 npm run lint --prefix frontend
 ```
 
-Static analysis is also executed by the GitHub Actions workflow. Any lint errors cause the relevant workflow job to fail.
+**Frontend tests:**
 
-### Continuous integration
-
-The GitHub Actions workflow is stored in:
-
-```text
-.github/workflows/ci.yml
+```powershell
+npm test --prefix frontend
 ```
 
-The workflow runs backend and frontend validation jobs. The backend job installs dependencies, runs backend static analysis, starts the API with a MongoDB service, and executes the Newman API collection. The frontend job installs frontend dependencies, runs frontend static analysis and tests, and creates a production build.
+**Frontend production build:**
 
-The workflow provides automated checks for changes pushed to the repository and pull requests. Review the Actions tab in GitHub for the latest run and its test/build results.
+```powershell
+npm run build --prefix frontend
+```
 
-## Evidence
+**Backend API integration tests (Newman):**
 
-Supporting screenshots and evidence are organised under the project documentation and testing folders. Relevant evidence includes:
+Start the backend and ensure MongoDB is reachable before running this command:
 
-- GitHub Actions workflow results.
-- Backend and frontend static-analysis results.
-- Docker Compose/container status.
-- The running containerised frontend.
-- Backend application logs.
-- Postman/Newman test results.
-- Tax dashboard output.
+```powershell
+npm test
+```
 
-Ensure that screenshots included in the final submission show the current implementation and the latest successful test results.
+The root `npm test` script runs `tests/Postman/HustleHub - Part 2 Security.postman_collection.json` against `https://localhost:3000`. The script uses Newman with `--insecure` for the local self-signed HTTPS certificate; do not use this option for production services.
 
-## Important security notes
+The other collections in `tests/Postman/` are retained for the Part 1 security checks and the broader API workflow. The Postman UI can import any of these JSON collection files for manual execution.
 
-- Never commit `.env` files.
-- Never commit real passwords, JWT secrets or other credentials.
-- Never share JWT tokens publicly.
-- Do not commit private production certificates or private keys.
-- Use self-signed certificates only for local development.
-- Treat application and audit logs as potentially sensitive operational data.
-- Use trusted TLS certificates and enable certificate verification in production.
+## Continuous integration and static analysis
 
-## Conclusion
+The GitHub Actions workflow is `.github/workflows/ci.yml`. It runs backend linting and Newman integration tests against a MongoDB service, followed by frontend linting, tests and a production build. Review the repository's Actions tab for the latest workflow result.
 
-HustleHub demonstrates a full-stack MERN gig marketplace with authentication, role-based authorisation, resource ownership controls, validation, sanitisation, rate limiting, security headers, HTTPS, account lockout, inactivity logout, audit logging, freelancer income reporting, a SARS-based tax estimate, automated testing, static analysis, CI and Docker-based deployment.
+SonarQube Cloud is connected to the group's public fork because of repository integration permissions: [HustleHub – Part 3 Fork](https://github.com/EMGPPT/insy7314-g1-part-2-and-poe-group-12-fork).
+
+## Screenshots and evidence
+
+Evidence is kept alongside the relevant project area:
+
+- `docs/screenshots/docker/` — Docker containers, Compose status, running frontend, login and backend logs.
+- `docs/screenshots/monitoring/` — Grafana application-log dashboard.
+- `docs/screenshots/SonarQube/` — SonarQube quality-gate summary.
+- `tests/screenshots/` — Postman registration and authentication test evidence.
+
+### Docker deployment
+
+![HustleHub Docker containers](docs\screenshots\docker\01-docker-containers.png)
+
+### Grafana application-log monitoring
+
+![HustleHub Grafana application logs](docs\screenshots\monitoring\grafana Live Monitoring Dashboard.PNG)
+
+### SonarQube quality gate
+
+![HustleHub SonarQube report summary](docs\screenshots\SonarQube\SonarQube Report Summary.PNG)
+
+Capture fresh screenshots after running the latest build and tests before using the evidence in a final assessment submission. The Grafana screenshot included here records the initial monitoring dashboard and log ingestion state; it is not a claim that all application errors have been resolved.
+
+## Source-control and operational notes
+
+- Never commit `.env` files, passwords, JWT secrets, API keys or private certificates.
+- Keep `backend/certs/` private and local.
+- Runtime logs under `logs/` are ignored by Git and may contain operational details.
+- Frontend build output and audit-report output are generated locally and are not committed.
+- The local self-signed certificate and Nginx proxy configuration are for development only.
+- Do not use real payment-card details; the payment flow is a simulation.
 
 ## References
 
-Meyer, S. 2020. *Navigating RS256 and JWKS* [online]. Available at: https://auth0.com/blog/navigating-rs256-and-jwks/ [Accessed 17 August 2026].
-
-bsmith-auth0. 2026. *JSON Web Token (JWT) implementation using jsonwebtoken* [online]. Available at: https://www.npmjs.com/package/jsonwebtoken [Accessed 1 October 2026].
-
-auth0Developers. 2022. *Express.js Code Sample: API Role-Based Access Control* [online]. Available at: https://developer.auth0.com/resources/code-samples/api/express/basic-role-based-access-control [Accessed 17 August 2026].
-
-Arias, D. 2023. *Node.js API Authorization By Example* [online]. Available at: https://developer.auth0.com/resources/guides/api/express/basic-authorization [Accessed 18 August 2026].
-
-dcode. 2025. *bcryptjs* [online]. Available at: https://www.npmjs.com/package/bcryptjs [Accessed 18 August 2026].
-
-ExorTek. 2026. *@exortek/express-mongo-sanitize* [online]. Available at: https://www.npmjs.com/package/@exortek/express-mongo-sanitize [Accessed 1 October 2026].
-
-Friedly, N. and Vedant, K. 2023. *express-rate-limit documentation* [online]. Available at: https://github.com/express-rate-limit/express-rate-limit [Accessed 1 October 2026].
-
-Express.js. 2026. *Express routing* [online]. Available at: https://expressjs.com/en/guide/routing.html [Accessed 3 September 2026].
-
-express-validator. 2026. *express-validator documentation* [online]. Available at: https://express-validator.github.io/docs/ [Accessed 18 August 2026].
-
-Helmet. 2026. *Helmet documentation: security headers and Content Security Policy* [online]. Available at: https://helmet.js.org/ [Accessed 1 October 2026].
-
-Mongoose. 2026. *Mongoose validation documentation* [online]. Available at: https://mongoosejs.com/docs/validation.html [Accessed 1 October 2026].
-
-Node.js. 2026. *HTTPS documentation* [online]. Available at: https://nodejs.org/api/https.html [Accessed 1 October 2026].
-
-Postman Docs. 2026. *Install and run Newman* [online]. Available at: https://learning.postman.com/docs/reference/newman-cli/installing-running-newman/ [Accessed 1 October 2026].
-
-Borenkraout, M. 2024. *React Testing Library documentation* [online]. Available at: https://testing-library.com/docs/react-testing-library/intro/ [Accessed 1 October 2026].
-
-South African Revenue Service (SARS). 2026. *Rates of Tax for Individuals: 2027 Tax Year* [online]. Available at: https://www.sars.gov.za/tax-rates/income-tax/rates-of-tax-for-individuals/ [Accessed 30 October 2026].
-
-The Independent Institute of Education (IIE). 2026. *Information Systems 3D INSY7314: Application Development Security Module Manual*. The Independent Institute of Education. Unpublished.
+- Auth0. 2020. *Navigating RS256 and JWKS* [online]. Available at: https://auth0.com/blog/navigating-rs256-and-jwks/ [Accessed 17 August 2026].
+- Auth0 Developers. 2022. *Express.js Code Sample: API Role-Based Access Control* [online]. Available at: https://developer.auth0.com/resources/code-samples/api/express/basic-role-based-access-control [Accessed 17 August 2026].
+- Arias, D. 2023. *Node.js API Authorization By Example* [online]. Available at: https://developer.auth0.com/resources/guides/api/express/basic-authorization [Accessed 18 August 2026].
+- bcryptjs. 2026. *bcryptjs* [online]. Available at: https://www.npmjs.com/package/bcryptjs [Accessed 18 August 2026].
+- ExorTek. 2026. *@exortek/express-mongo-sanitize* [online]. Available at: https://www.npmjs.com/package/@exortek/express-mongo-sanitize [Accessed 1 October 2026].
+- Express.js. 2026. *Express routing* [online]. Available at: https://expressjs.com/en/guide/routing.html [Accessed 3 September 2026].
+- express-validator. 2026. *express-validator documentation* [online]. Available at: https://express-validator.github.io/docs/ [Accessed 18 August 2026].
+- Friedly, N. and Vedant, K. 2023. *express-rate-limit documentation* [online]. Available at: https://github.com/express-rate-limit/express-rate-limit [Accessed 1 October 2026].
+- Helmet. 2026. *Helmet documentation: security headers and Content Security Policy* [online]. Available at: https://helmet.js.org/ [Accessed 1 October 2026].
+- Mongoose. 2026. *Mongoose validation documentation* [online]. Available at: https://mongoosejs.com/docs/validation.html [Accessed 1 October 2026].
+- Node.js. 2026. *HTTPS documentation* [online]. Available at: https://nodejs.org/api/https.html [Accessed 1 October 2026].
+- Postman Docs. 2026. *Install and run Newman* [online]. Available at: https://learning.postman.com/docs/reference/newman-cli/installing-running-newman/ [Accessed 1 October 2026].
+- South African Revenue Service (SARS). 2026. *Rates of Tax for Individuals: 2027 Tax Year* [online]. Available at: https://www.sars.gov.za/tax-rates/income-tax/rates-of-tax-for-individuals/ [Accessed 30 October 2026].
+- The Independent Institute of Education (IIE). 2026. *Information Systems 3D INSY7314: Application Development Security Module Manual*. Unpublished.

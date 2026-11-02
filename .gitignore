@@ -1,12 +1,23 @@
+# Node.js dependencies
 node_modules/
+**/node_modules/
 
-# Visual Studio temporary files
+# Build and test outputs
+frontend/build/
+coverage/
+**/coverage/
+frontend/frontend-audit.json
+
+# IDE files
 .vs/
+.DS_Store
 
-# Environment files may contain secrets such as JWT signing keys.
+# Environment files may contain secrets. Keep only the example template.
 .env
+.env.*
+!.env.example
 
-# Certificate and private-key files must never be committed to source control.
+# Certificates and private keys must not be committed.
 *.pem
 *.key
 *.crt
@@ -14,6 +25,9 @@ node_modules/
 *.pfx
 *.cer
 certs/
+backend/certs/
 
-# Application logs
-logs/
+# Runtime logs are local operational data; retain only the directory marker.
+logs/*
+!logs/
+!logs/.gitkeep
