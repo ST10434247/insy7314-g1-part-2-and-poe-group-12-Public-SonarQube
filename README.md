@@ -2,41 +2,53 @@
 
 HustleHub is a secure gig marketplace built with React, Express, Node.js and MongoDB. Clients can browse gigs, book freelancers and make simulated payments. Freelancers can publish gigs, manage bookings and view income information. Administrators can review eligible disputes and inspect security audit records.
 
-## Related repositories and assessment scope
+## Project repositories and assessment scope
 
-- **Part 2 submission repository:** this repository.
-- **SonarQube-connected fork:** [HustleHub – Part 3 Fork](https://github.com/ST10434247/insy7314-g1-part-2-and-poe-group-12-Public-SonarQube.git). This is the repo used for SonarQube Cloud integration due to permission issues;
+There are **two repositories** for this project. Use the EMGPPT repository as the official Part 2 submission. The ST10434247 repository is the public copy connected to SonarQube Cloud for static analysis.
 
-The Part 2 implementation extends the base marketplace with the additional security, workflow, reporting, testing and monitoring features listed below. This section is intended as a marking guide: each item points to the relevant implementation and, where available, test/evidence location.
+| Repository | Purpose |
+|---|---|
+| [Official Part 2 submission — EMGPPT](https://github.com/EMGPPT/insy7314-g1-part-2-and-poe-group-12) | Primary submission repository. This is the repository containing the assessed application and final submission. |
+| [SonarQube analysis copy — ST10434247](https://github.com/ST10434247/insy7314-g1-part-2-and-poe-group-12-Public-SonarQube) | Public analysis copy connected to SonarQube Cloud. Use it to inspect static-analysis results; it does not replace the official submission repository. |
 
-## Additional features and marking guide
+The Part 1 Postman collection is retained in this project for regression testing of earlier security functionality. It is **not** a separate project repository.
 
-| Additional feature | What to assess | Main implementation | Supporting tests / evidence |
+The marking guide below separates the **required application features** from the **student-defined additional security features**. Required functionality is not presented as original student-defined work. The additional-features section identifies the security enhancements that go beyond the baseline requirements.
+
+## 1. Required application features
+
+These features form the core HustleHub specification and the required application/security baseline.
+
+| Required feature | What the marker should verify | Main implementation | Supporting tests / evidence |
 |---|---|---|---|
-| Role-based access control | Client, freelancer and administrator permissions; protected routes and role checks. | `backend/middleware/auth.js`, `backend/routes/`, `frontend/src/context/AuthContext.jsx` | `tests/Postman/HustleHub - Part 2 Security.postman_collection.json` |
-| Resource ownership enforcement | Users can only access or modify resources they are authorised to use. | `backend/routes/bookings.js`, `backend/routes/gigs.js`, `backend/routes/transactions.js` | Part 2 Postman security collection |
-| Authentication hardening | JWT authentication, password hashing, failed-login handling and inactivity logout. | `backend/routes/auth.js`, `backend/models/User.js`, `frontend/src/context/AuthContext.jsx` | Part 2 Postman collection; `tests/screenshots/` |
-| Input validation and sanitisation | Request-field validation and MongoDB query sanitisation. | `backend/middleware/validate.js`, `backend/server.js` | Part 2 Postman collection |
-| Rate limiting and secure HTTP headers | General/API and authentication rate limits; Helmet and Content Security Policy. | `backend/server.js` | Part 2 Postman collection; backend security configuration |
-| Security audit trail | Security-relevant and administrative actions recorded for review. | `backend/models/AuditLog.js`, `backend/utils/auditLogger.js`, `backend/routes/admin.js` | Part 2 Postman collection; administrator audit interface |
-| Booking and transaction workflow | Booking status lifecycle, simulated payment and transaction records. | `backend/models/Booking.js`, `backend/models/Transaction.js`, `backend/routes/bookings.js`, `backend/routes/transactions.js` | Part 2 Postman collection; `frontend/src/components/BookingManagement.jsx`, `PaymentPage.jsx` |
-| Freelancer income and tax estimate | Income totals based on paid transactions and South African tax-year estimate. | `backend/routes/transactions.js`, `frontend/src/components/TaxDashboard.jsx` | `frontend/src/tests/TaxDashboard.test.jsx` |
-| Administrator dispute management | Admin review of eligible disputes. | `backend/routes/admin.js`, `frontend/src/components/AdminDisputes.jsx` | Application workflow; admin UI |
-| Structured application logging | JSON logs with timestamps, severity and event names. | `backend/config/logger.js`, `backend/server.js`, `backend/utils/auditLogger.js` | `docs/screenshots/docker/05-backend-logs.png` |
-| Grafana/Loki log monitoring | Alloy ships application logs to Loki; Grafana dashboard displays errors, auth failures and business events. | `monitoring/`, `docker-compose.yml` | `docs/screenshots/monitoring/grafana-application-logs.png` |
-| Containerised deployment | Frontend, backend and monitoring stack started through Docker Compose. | `docker-compose.yml`, `backend/Dockerfile`, `frontend/Dockerfile` | `docs/screenshots/docker/` |
-| Automated checks and CI | Backend/frontend linting, frontend tests/build and Newman API checks in GitHub Actions. | `.github/workflows/ci.yml`, `package.json`, `frontend/package.json` | GitHub Actions run; test collections |
-| Dependency/security remediation | Dependency updates and compatibility patches retained in the lockfiles and patch files. | `package.json`, `package-lock.json`, `frontend/package-lock.json`, `patches/`, `frontend/patches/` | SonarQube evidence in `docs/screenshots/SonarQube/` |
+| User registration and authentication | Clients and freelancers can register and log in. Passwords are hashed and successful login issues a JWT. | `backend/routes/auth.js`, `backend/models/User.js`, `frontend/src/components/Login.jsx`, `frontend/src/context/AuthContext.jsx` | `tests/Postman/HustleHub - Part 1 Security.postman_collection.json`, `tests/Postman/HustleHub - Part 2 Security.postman_collection.json`, `tests/screenshots/` |
+| Role-based access control and resource ownership | Client, freelancer and administrator routes/actions are restricted by role. Users cannot access or modify another user's protected resources. | `backend/middleware/auth.js`, `backend/routes/gigs.js`, `backend/routes/bookings.js`, `backend/routes/transactions.js`, `backend/routes/admin.js` | Part 2 Postman collection; test requests for unauthorised access and ownership restrictions |
+| Freelancer gig management | Freelancers can create, view, update and manage their gig listings. | `backend/routes/gigs.js`, `backend/models/Gig.js`, `frontend/src/components/PublishGig.jsx`, `frontend/src/components/GigList.jsx` | `tests/Postman/HustleHub API Tests.postman_collection.json`, Part 2 Postman collection |
+| Client browsing and booking | Clients can browse available gigs and create bookings. Booking status changes follow the application's workflow. | `backend/routes/bookings.js`, `backend/models/Booking.js`, `frontend/src/components/GigList.jsx`, `frontend/src/components/BookingManagement.jsx`, `frontend/src/components/ClientBookings.jsx` | Part 2 Postman collection; frontend booking workflow |
+| Transaction records and simulated payments | Transactions are linked to bookings and users. Payment is simulated; no external payment provider is called. | `backend/routes/transactions.js`, `backend/models/Transaction.js`, `frontend/src/components/PaymentPage.jsx`, `frontend/src/components/CardInput.jsx` | Part 2 Postman collection; frontend payment flow |
+| Freelancer income tracking and tax dashboard | Paid transactions feed the freelancer's income totals and the South African tax-year estimate. | `backend/routes/transactions.js`, `frontend/src/components/TaxDashboard.jsx` | `frontend/src/tests/TaxDashboard.test.jsx`; dashboard workflow |
+| Baseline security controls | Request validation, MongoDB query sanitisation, access restrictions, rate limiting, Helmet/CSP, request-size limits and HTTPS are applied. | `backend/middleware/validate.js`, `backend/server.js`, `backend/middleware/auth.js`, `backend/routes/` | Part 1 and Part 2 Postman collections; source configuration |
+| System logging | Login attempts, booking events, transaction events and errors are recorded as structured application logs. Security-related authentication events are also stored as audit records for administrator review. | `backend/config/logger.js`, `backend/utils/auditLogger.js`, `backend/routes/auth.js`, `backend/routes/bookings.js`, `backend/routes/transactions.js`, `backend/models/AuditLog.js`, `backend/routes/admin.js` | `logs/app.log`, `logs/error.log`; `docs/screenshots/docker/05-backend-logs.png`; Grafana evidence below |
+| Backend and frontend containerisation | Separate backend and frontend Dockerfiles and a Docker Compose deployment are provided. | `backend/Dockerfile`, `frontend/Dockerfile`, `docker-compose.yml` | `docs/screenshots/docker/` |
+| Automated testing and CI/CD | GitHub Actions runs backend linting and Newman API integration tests against MongoDB, plus frontend linting, tests and a production build. | `.github/workflows/ci.yml`, `package.json`, `frontend/package.json` | GitHub Actions tab; Postman/Newman collections; frontend tests |
+| Static code analysis | ESLint checks the backend and frontend. SonarQube Cloud is connected to the separate public analysis copy for code-quality and security analysis. | `backend/.eslintrc.json`, `frontend/` ESLint configuration, SonarQube Cloud analysis repository | `docs/screenshots/SonarQube/` |
 
-### Core marketplace functionality
+**Scope note:** the current GitHub Actions workflow runs backend and frontend checks, API integration tests and the frontend build. Docker Compose is demonstrated and verified separately; the workflow does not currently start the full Docker Compose stack as a pipeline job. SonarQube Cloud is connected through the separate ST10434247 analysis repository rather than being a step in `.github/workflows/ci.yml`.
 
-- Client and freelancer registration and login with JWT authentication.
-- Gig creation, browsing and management.
-- Booking workflow and simulated payment/transaction handling.
-- Freelancer income reporting and a South African tax estimate.
-- Administrator dispute review and security audit-log access.
+## 2. Student-defined additional security features
 
-Payments are simulated. HustleHub does not process real card payments through an external payment provider. Do not enter real payment-card details.
+The following are the student-defined additions to the required baseline. They are listed separately for the rubric's **Own Security Features** criterion and are not being counted as substitutes for required authentication, authorisation, validation, sanitisation or logging.
+
+| Student-defined security feature | Behaviour | Main implementation | How the marker can verify it |
+|---|---|---|---|
+| Temporary account lockout after repeated failed logins | An account is locked for 15 minutes after five consecutive incorrect password attempts. A successful login resets the failed-attempt counter and lock state. | `backend/models/User.js` (`failedLoginAttempts`, `lockUntil`); `backend/routes/auth.js` (failed-login counting, lockout and reset logic) | Use a dedicated test account and submit five incorrect passwords. Check the admin-protected audit endpoint for `USER_ACCOUNT_LOCKED` / `USER_LOGIN_BLOCKED` records: `GET /api/admin/audit-logs?action=USER_ACCOUNT_LOCKED`. |
+| Automatic logout after inactivity | The frontend clears the in-memory user and JWT after 10 minutes without detected user interaction. The timer resets when the user moves, clicks, types, scrolls or touches the page. | `frontend/src/context/AuthContext.jsx` (`INACTIVITY_TIMEOUT_MS`, activity listeners and logout timer) | Log in, leave the application idle for 10 minutes, then attempt to use a protected screen. The user should be logged out and need to authenticate again. |
+
+The inactivity control is a frontend session timeout. It clears the token from the running application; it does not revoke a previously copied JWT on the server. The API's JWT expiry remains one hour.
+
+## Marketplace payment note
+
+Payments are simulated. HustleHub does not process real card payments through an external payment provider. Use test values only; never enter real payment-card details.
 
 ## Repository layout
 
@@ -69,8 +81,8 @@ Docker Compose is the default setup for assessment and demonstration. It builds 
 ### 1. Clone the repository
 
 ```powershell
-git clone <https://github.com/EMGPPT/insy7314-g1-part-2-and-poe-group-12.git>
-cd <https://github.com/EMGPPT/insy7314-g1-part-2-and-poe-group-12.git>
+git clone https://github.com/EMGPPT/insy7314-g1-part-2-and-poe-group-12.git
+cd insy7314-g1-part-2-and-poe-group-12
 ```
 
 ### 2. Configure environment variables
@@ -220,7 +232,7 @@ http://localhost:3002
 
 Sign in with `GRAFANA_ADMIN_USER` and `GRAFANA_ADMIN_PASSWORD` from `.env`, then open **Dashboards → HustleHub → HustleHub - Application Logs**.
 
-The dashboard includes error and authentication-failure counts, booking and transaction event counts, log volume by severity, and recent application/error logs. Loki retention is configured for seven days. This is log monitoring: CPU, memory, request-latency and other infrastructure/performance metrics are not currently exported.
+The dashboard includes error and authentication-failure counts, booking and transaction event counts, log volume by severity, and recent application/error logs. Loki retention is configured for seven days. This is a locally hosted Docker monitoring stack, not a managed cloud logging service. CPU, memory, request-latency and other infrastructure/performance metrics are not currently exported.
 
 The Grafana, Loki and Alloy configuration is stored in:
 
@@ -255,7 +267,9 @@ SARS tax-rate reference: <https://www.sars.gov.za/tax-rates/income-tax/rates-of-
 
 ## Security controls
 
-| Control | Implementation |
+The following table summarises the required baseline security controls. The two student-defined enhancements are listed separately in section 2 above so the marker can distinguish them from the baseline.
+
+| Baseline control | Implementation |
 |---|---|
 | Authentication | JWT Bearer tokens; one-hour token expiry. |
 | Password storage | bcrypt password hashing. |
@@ -266,9 +280,8 @@ SARS tax-rate reference: <https://www.sars.gov.za/tax-rates/income-tax/rates-of-
 | Rate limiting | General API and stricter authentication rate limits. |
 | HTTP headers | Helmet and Content Security Policy. |
 | Request size | JSON request bodies limited to 10 KB. |
-| Login protection | Temporary lockout after five consecutive failed attempts for 15 minutes; successful login resets the failed-attempt counter. |
-| Inactivity handling | Frontend logs out after 10 minutes without detected activity. |
-| Audit records | Security and relevant user actions are recorded for administrator review. |
+| HTTPS | Backend API uses HTTPS with a local self-signed certificate for development. |
+| Security audit records | Authentication outcomes and account-security events are stored for administrator review. |
 | Application logs | Structured JSON logs are written to `logs/`; passwords, JWT secrets and tokens must not be logged. |
 
 ## Testing and static analysis
@@ -315,7 +328,7 @@ The other collections in `tests/Postman/` are retained for the Part 1 security c
 
 The GitHub Actions workflow is `.github/workflows/ci.yml`. It runs backend linting and Newman integration tests against a MongoDB service, followed by frontend linting, tests and a production build. Review the repository's Actions tab for the latest workflow result.
 
-SonarQube Cloud is connected to the group's public fork because of repository integration permissions: [HustleHub – Part 3 Fork](https://github.com/EMGPPT/insy7314-g1-part-2-and-poe-group-12-fork).
+SonarQube Cloud is connected to the separate public analysis copy: [ST10434247 / insy7314-g1-part-2-and-poe-group-12-Public-SonarQube](https://github.com/ST10434247/insy7314-g1-part-2-and-poe-group-12-Public-SonarQube). The official submission remains [EMGPPT / insy7314-g1-part-2-and-poe-group-12](https://github.com/EMGPPT/insy7314-g1-part-2-and-poe-group-12).
 
 ## Screenshots and evidence
 
@@ -328,15 +341,15 @@ Evidence is kept alongside the relevant project area:
 
 ### Docker deployment
 
-![HustleHub Docker containers](docs\screenshots\docker\01-docker-containers.png)
+![HustleHub Docker containers](docs/screenshots/docker/01-docker-containers.png)
 
 ### Grafana application-log monitoring
 
-![HustleHub Grafana application logs](docs\screenshots\monitoring\grafana Live Monitoring Dashboard.PNG)
+![HustleHub Grafana application logs](docs/screenshots/monitoring/grafana-application-logs.png)
 
 ### SonarQube quality gate
 
-![HustleHub SonarQube report summary](docs\screenshots\SonarQube\SonarQube Report Summary.PNG)
+![HustleHub SonarQube report summary](docs/screenshots/SonarQube/SonarQube%20Report%20Summary.PNG)
 
 Capture fresh screenshots after running the latest build and tests before using the evidence in a final assessment submission. The Grafana screenshot included here records the initial monitoring dashboard and log ingestion state; it is not a claim that all application errors have been resolved.
 
