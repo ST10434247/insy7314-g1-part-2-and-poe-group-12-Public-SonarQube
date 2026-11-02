@@ -22,7 +22,8 @@
     "@tootallnate/once": "2.0.1",
     "resolve-url-loader": "5.0.0",
     "serialize-javascript": "7.1.4",
-    "webpack-dev-server": "5.2.7"
+    "webpack-dev-server": "5.2.7",
+    "uri-js": "npm:@wraith-ops/uri-js@^4.4.2"
   },
   "scripts": {
     "start": "set PORT=3001 && react-scripts start",
