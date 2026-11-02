@@ -1,0 +1,54 @@
+local.file_match "hustlehub_logs" {
+  path_targets = [
+    {
+      "__path__" = "/var/log/hustlehub/app.log",
+      "job" = "hustlehub",
+      "log_type" = "application",
+    },
+    {
+      "__path__" = "/var/log/hustlehub/error.log",
+      "job" = "hustlehub",
+      "log_type" = "error",
+    },
+  ]
+
+  sync_period = "5s"
+}
+
+loki.process "hustlehub" {
+  forward_to = [loki.write.local.receiver]
+
+  stage.json {
+    expressions = {
+      timestamp = "timestamp",
+      level     = "level",
+      event     = "event",
+      service   = "service",
+    }
+  }
+
+  stage.timestamp {
+    source = "timestamp"
+    format = "RFC3339Nano"
+  }
+
+  stage.labels {
+    values = {
+      level   = "",
+      event   = "",
+      service = "",
+    }
+  }
+}
+
+loki.source.file "hustlehub" {
+  targets       = local.file_match.hustlehub_logs.targets
+  forward_to    = [loki.process.hustlehub.receiver]
+  tail_from_end = false
+}
+
+loki.write "local" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}
