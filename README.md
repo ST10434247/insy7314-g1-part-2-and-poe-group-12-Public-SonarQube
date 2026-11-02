@@ -1,14 +1,14 @@
-# HustleHub — Part 2 Submission
+# HustleHub — Part 3 Submission
 
 HustleHub is a secure gig marketplace built with React, Express, Node.js and MongoDB. Clients can browse gigs, book freelancers and make simulated payments. Freelancers can publish gigs, manage bookings and view income information. Administrators can review eligible disputes and inspect security audit records.
 
 ## Project repositories and assessment scope
 
-There are **two repositories** for this project. Use the EMGPPT repository as the official Part 2 submission. The ST10434247 repository is the public copy connected to SonarQube Cloud for static analysis.
+There are **two repositories** for this project. Use the EMGPPT repository as the official Part 3 submission. The ST10434247 repository is the public copy connected to SonarQube Cloud for static analysis.
 
 | Repository | Purpose |
 |---|---|
-| [Official Part 2 submission — EMGPPT](https://github.com/EMGPPT/insy7314-g1-part-2-and-poe-group-12) | Primary submission repository. This is the repository containing the assessed application and final submission. |
+| [Official Part 3 submission — EMGPPT](https://github.com/EMGPPT/insy7314-g1-part-2-and-poe-group-12) | Primary submission repository. This is the repository containing the assessed application and final submission. |
 | [SonarQube analysis copy — ST10434247](https://github.com/ST10434247/insy7314-g1-part-2-and-poe-group-12-Public-SonarQube) | Public analysis copy connected to SonarQube Cloud. Use it to inspect static-analysis results; it does not replace the official submission repository. |
 
 The Part 1 Postman collection is retained in this project for regression testing of earlier security functionality. It is **not** a separate project repository.
